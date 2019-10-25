@@ -13,6 +13,8 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
+var db *sql.DB
+var err error
 
 func main () {
 
@@ -44,11 +46,6 @@ func main () {
 
 	fmt.Println("Connected to DB")
 
-	_, err = db.Exec(sqlStatement)
-	if err != nil {
-		panic(err)
-	}
-
 	dstoken := os.Getenv("DISCORD_TOKEN")
 	dg, err := discordgo.New("Bot " + dstoken)
 	if err != nil {
@@ -79,7 +76,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 
 	if m.Content == ".ready" {
-		s.ChannelMessageSend(m.ChannelID, s.State.User.Username + " Has joined the race.")
-		sqlStatement := `INSERT INTO races (name, starttime) VALUES (s.State.User.Username, time.Now)`
+		s.ChannelMessageSend(m.ChannelID, m.Author.Username + " has joined the race.")
+		var sqlStatement = `
+		INSERT INTO races (name, starttime) 
+		VALUES ($1, $2)`
+		_, err = db.Exec(sqlStatement, m.Author.Username, time.Now())
+		if err != nil {
+			panic(err)
+		}
 	}
 }
