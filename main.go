@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
-	"io/ioutil"
+	"database/sql"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main () {
@@ -18,13 +20,28 @@ func main () {
 		log.Fatal("Error loading .env file")
 	}
 
-	file, err := ioutil.TempFile(".", "game.*.race")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(file.Name())
+	host := os.Getenv("PG_HOST")
+	port := 5432
+	user := os.Getenv("PG_USER")
+	password := os.Getenv("PG_PASS")
+	dbname := os.Getenv("PG_NAME")
 
-	fmt.Println(file.Name)
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
+	db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Connected to DB")
 
 	dstoken := os.Getenv("DISCORD_TOKEN")
 	dg, err := discordgo.New("Bot " + dstoken)
