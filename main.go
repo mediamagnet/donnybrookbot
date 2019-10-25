@@ -80,7 +80,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.Content == ".ready" {
 		s.ChannelMessageSend(m.ChannelID, s.State.User.Username + " Has joined the race.")
-		sqlStatement := `INSERT INTO races (name, starttime)
-						VALUES (s.State.User.Username, time.Now)`
+		sqlStatement := `INSERT INTO races (name, starttime) VALUES (s.State.User.Username, time.Now)`
 	}
 }
