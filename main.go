@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
@@ -43,6 +44,11 @@ func main () {
 
 	fmt.Println("Connected to DB")
 
+	_, err = db.Exec(sqlStatement)
+	if err != nil {
+		panic(err)
+	}
+
 	dstoken := os.Getenv("DISCORD_TOKEN")
 	dg, err := discordgo.New("Bot " + dstoken)
 	if err != nil {
@@ -71,7 +77,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if m.Content == ".ping" {
-		s.ChannelMessageSend(m.ChannelID, "Pong!")
+
+	if m.Content == ".ready" {
+		s.ChannelMessageSend(m.ChannelID, s.State.User.Username + " Has joined the race.")
+		sqlStatement := `INSERT INTO races (name, starttime)
+						VALUES (s.State.User.Username, time.Now)`
 	}
 }
