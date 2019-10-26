@@ -1,20 +1,20 @@
 package main
 
 import (
-	"fmt"
 	"database/sql"
+	"fmt"
+	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
 var db *sql.DB
 var err error
+var atime = time.Now()
 
 func main () {
 
@@ -75,14 +75,37 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 
-	if m.Content == ".ready" {
+	// if m.Content == ".ready" {
+		// s.ChannelMessageSend(m.ChannelID, m.Author.Username + " has joined the race.")
+		// var sqlStatement = `
+		// INSERT INTO races (name, starttime)
+		// VALUES ($1, $2)`
+		// _, err = db.Exec(sqlStatement, m.Author.Username, time.Now())
+		// if err != nil {
+		//	panic(err)
+		// }
+	// }
+	switch {
+	case m.Content == ".join":
 		s.ChannelMessageSend(m.ChannelID, m.Author.Username + " has joined the race.")
-		var sqlStatement = `
-		INSERT INTO races (name, starttime) 
-		VALUES ($1, $2)`
-		_, err = db.Exec(sqlStatement, m.Author.Username, time.Now())
-		if err != nil {
-			panic(err)
-		}
+	case m.Content == ".ready":
+		s.ChannelMessageSend(m.ChannelID, m.Author.Username + " has readied up.")
+	case m.Content == ".start":
+		s.ChannelMessageSend(m.ChannelID, "All racers have readied")
+		time.Sleep(1*time.Second)
+		s.ChannelMessageSend(m.ChannelID, "Starting in 3.")
+		time.Sleep(1*time.Second)
+		s.ChannelMessageSend(m.ChannelID, "2.")
+		time.Sleep(1*time.Second)
+		s.ChannelMessageSend(m.ChannelID, "1.")
+		time.Sleep(1*time.Second)
+		s.ChannelMessageSend(m.ChannelID, "Go!")
+	case m.Content == ".done":
+		var time2 = time.Now()
+		var endtime1 = time2.Sub(atime)
+		var endtime = endtime1.Truncate(1*time.Millisecond)
+		s.ChannelMessageSend(m.ChannelID, m.Author.Username + " has finished the race in: " + endtime.String())
+	case m.Content == ".forfit":
+		s.ChannelMessageSend(m.ChannelID, m.Author.Username + " has forfit the race, hope you join us for the next race!")
 	}
 }
