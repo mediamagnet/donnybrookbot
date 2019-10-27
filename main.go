@@ -3,15 +3,14 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/bwmarrin/dgvoice"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -54,24 +53,6 @@ func main() {
 		log.Fatal("Error creating Discord session,", err)
 		return
 	}
-
-	guildid := os.Getenv("DISCORD_GUILD")
-	chanid := os.Getenv("DISCORD_VOICE")
-	dgv, err := dg.ChannelVoiceJoin(guildid, chanid, false, true)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	fmt.Println("Playing Audio")
-
-		files, _ := ioutil.ReadDir("./audio")
-		for _, f := range files {
-			fmt.Println("Play Audio File:", f.Name())
-			dg.UpdateStatus(0, f.Name())
-			dgvoice.PlayAudioFile(dgv, fmt.Sprintf("%s%s", "./audio", f.Name()), make(chan bool))
-		}
-	dgv.Close()
 
 	dg.AddHandler(messageCreate)
 
@@ -116,11 +97,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//	panic(err)
 	// }
 	// }
-	switch {
 	// Set up Race
-	case m.Content == ".setup":
+	if strings.HasPrefix(m.Content, ".setup") {
+		var msgstr = m.Content
+		msgary := strings.Fields(msgstr)
+		var arg1 = msgary[1]
+		var arg2 = msgary[2]
 		var raceid = randomString(4)
-		s.ChannelMessageSend(m.ChannelID, m.Author.Username+", ready to start race "+raceid)
+		s.ChannelMessageSend(m.ChannelID, m.Author.Username+", ready to start race "+raceid+" running "+arg1+" category "+arg2)
+	}
+	switch {
 	// Join Race
 	case m.Content == ".join":
 		s.ChannelMessageSend(m.ChannelID, m.Author.Username+" has joined the race.")
@@ -129,7 +115,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, m.Author.Username+" has readied up.")
 	// Start Race once all ready
 	case m.Content == ".start":
-		
 		s.ChannelMessageSend(m.ChannelID, "All racers have readied")
 		time.Sleep(1 * time.Second)
 		s.ChannelMessageSend(m.ChannelID, "Starting in 3.")
