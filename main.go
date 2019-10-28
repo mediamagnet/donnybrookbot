@@ -3,9 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	"log"
 	"math/rand"
 	"os"
@@ -13,11 +10,17 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/Necroforger/dgwidgets"
+	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
 var err error
 var atime = time.Now()
+var slogan = "Donnybrook - Because sometimes fast needs to be quantified."
 
 func main() {
 
@@ -100,11 +103,15 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Set up Race
 	if strings.HasPrefix(m.Content, ".setup") {
 		var msgstr = m.Content
-		msgary := strings.Fields(msgstr)
-		var arg1 = msgary[1]
-		var arg2 = msgary[2]
+		msgstr = strings.TrimPrefix(msgstr, ".setup")
+		msgstr = strings.TrimSpace(msgstr)
+		msgary := strings.Split(msgstr, ",")
+		fmt.Printf("%v", msgary)
+		var arg1 = msgary[0]
+		var arg2 = msgary[1]
 		var raceid = randomString(4)
-		s.ChannelMessageSend(m.ChannelID, m.Author.Username+", ready to start race "+raceid+" running "+arg1+" category "+arg2)
+		racestring := fmt.Sprintf("%s, has started race %s for %s in category %s.", m.Author.Username, raceid, arg1, arg2)
+		s.ChannelMessageSend(m.ChannelID, racestring)
 	}
 	switch {
 	// Join Race
@@ -131,7 +138,31 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var endtime = endtime1.Truncate(1 * time.Millisecond)
 		s.ChannelMessageSend(m.ChannelID, m.Author.Username+" has finished the race in: "+endtime.String())
 	// Quit the race
-	case m.Content == ".forfit":
+	case m.Content == ".forfeit":
 		s.ChannelMessageSend(m.ChannelID, m.Author.Username+" has forfeit the race, hope you join us for the next race!")
+	// Help text
+	case m.Content == ".help":
+		p := dgwidgets.NewPaginator(s, m.ChannelID)
+		p.Add(
+			&discordgo.MessageEmbed{
+				Title:       "Donnybrook Help:",
+				Description: "Welcome to the Donnybrook Race bot to get started use: `.setup` to create a race. \n Example: ```.setup A Link to the Past, Any%``` \n The rest of the commands are on page two.",
+				Color:       0x550000},
+			&discordgo.MessageEmbed{
+				Title:       "Donnybrook Help",
+				Description: ".join - Join the race. \n .ready - Ready up for the race. \n .start - Start the race once everyone is ready. \n .done - You finished the race. \n .forfeit - Leave the race early. \n .help - You're reading it.",
+				Color:       0x550000},
+			&discordgo.MessageEmbed{
+				Title:       "Page three",
+				Description: "Oh look you're on page three. \n https://imgur.com/gallery/pPP6u",
+				Color:       0x550000})
+		p.SetPageFooters()
+
+		p.ColourWhenDone = 0xffff
+
+		p.Widget.Timeout = time.Minute * 5
+
+		p.Spawn()
+
 	}
 }
