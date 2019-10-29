@@ -90,16 +90,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	// if m.Content == ".ready" {
-	// s.ChannelMessageSend(m.ChannelID, m.Author.Username + " has joined the race.")
-	// var sqlStatement = `
-	// INSERT INTO races (name, starttime)
-	// VALUES ($1, $2)`
-	// _, err = db.Exec(sqlStatement, m.Author.Username, time.Now())
-	// if err != nil {
-	//	panic(err)
-	// }
-	// }
 	// Set up Race
 	if strings.HasPrefix(m.Content, ".setup") {
 		var msgstr = m.Content
@@ -117,6 +107,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Join Race
 	case m.Content == ".join":
 		s.ChannelMessageSend(m.ChannelID, m.Author.Username+" has joined the race.")
+
 	// Ready up for race
 	case m.Content == ".ready":
 		s.ChannelMessageSend(m.ChannelID, m.Author.Username+" has readied up.")
@@ -154,7 +145,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				Color:       0x550000},
 			&discordgo.MessageEmbed{
 				Title:       "Page three",
-				Description: "Oh look you're on page three. \n https://imgur.com/gallery/pPP6u",
+				Description: "Oh look you're on page three \n https://i.imgur.com/d86T9Mw.png",
 				Color:       0x550000})
 		p.SetPageFooters()
 
@@ -164,5 +155,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		p.Spawn()
 
+	case m.Content == ".save":
+		s.ChannelMessageSend(m.ChannelID, m.Author.Username+" I don't know how to tell you this but you're in the matrix, It's time to wake up.")
+
+	case m.Content == ".wake":
+		s.ChannelMessageSend(m.ChannelID, "Error Invalid command: Can't wake up.")
 	}
+
 }
