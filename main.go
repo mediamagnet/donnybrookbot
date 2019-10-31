@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Necroforger/dgwidgets"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -133,33 +132,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, m.Author.Username+" has forfeit the race, hope you join us for the next race!")
 	// Help text
 	case m.Content == ".help":
-		p := dgwidgets.NewPaginator(s, m.ChannelID)
-		p.Add(
-			&discordgo.MessageEmbed{
-				Title:       "Donnybrook Help:",
-				Description: "Welcome to the Donnybrook Race bot to get started use: `.setup` to create a race. \n Example: ```.setup A Link to the Past, Any%``` \n The rest of the commands are on page two.",
-				Color:       0x550000},
-			&discordgo.MessageEmbed{
-				Title:       "Donnybrook Help",
-				Description: ".join - Join the race. \n .ready - Ready up for the race. \n .start - Start the race once everyone is ready. \n .done - You finished the race. \n .forfeit - Leave the race early. \n .help - You're reading it.",
-				Color:       0x550000},
-			&discordgo.MessageEmbed{
-				Title:       "Page three",
-				Description: "Oh look you're on page three \n https://i.imgur.com/d86T9Mw.png",
-				Color:       0x550000})
-		p.SetPageFooters()
-
-		p.ColourWhenDone = 0xffff
-
-		p.Widget.Timeout = time.Minute * 5
-
-		p.Spawn()
-
-	case m.Content == ".save":
-		s.ChannelMessageSend(m.ChannelID, m.Author.Username+" I don't know how to tell you this but you're in the matrix, It's time to wake up.")
-
-	case m.Content == ".wake":
-		s.ChannelMessageSend(m.ChannelID, "Error Invalid command: Can't wake up.")
+		s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+			Title:       "Donnybrook Help:",
+			Description: "Welcome to the Donnybrook Race bot to get started use: `.setup` to create a race. \n Example: ```.setup A Link to the Past, Any%``` \n `.join` - Join the race. \n `.ready` - Ready up for the race. \n `.start` - Start the race once everyone is ready. \n `.done` - You finished the race. \n `.forfeit` - Leave the race early. \n `.help` - You're reading it.",
+			Color:       0x550000,
+			Author: &discordgo.MessageEmbedAuthor{
+				URL:     "https://donnybrookbot.xyz",
+				Name:    "Donnybrook",
+				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128"},
+			Footer: &discordgo.MessageEmbedFooter{
+				Text:    slogan,
+				IconURL: "https://cdn.discordapp.com/embed/avatars/0.png"}})
 	}
 
 }
