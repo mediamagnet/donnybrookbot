@@ -1,4 +1,4 @@
-package donnybrook
+package main
 
 import (
 	"context"
@@ -28,24 +28,23 @@ var endtime1 = time.Now()
 
 // Players should have comment
 type Players struct {
-	Name      string    `bson:"Name"`
-	ChannelID string    `bson:"ChannelID"`
-	RaceID    string    `bson:"RaceID"`
-	JoinTime  time.Time `bson:"Join Time,omitempty"`
-	DoneTime  time.Time `bson:"Done Time,omitempty"`
+	Name      string
+	ChannelID string
+	joinTime  string
+	doneTime  string
 }
 
 // Races should have comment
 type Races struct {
-	RaceID    string    `bson:"RaceID"`
-	ChannelID string    `bson:"ChannelID"`
-	Game      string    `bson:"Game"`
-	Category  string    `bson:"Category"`
-	StartTime time.Time `bson:"Start Time"`
+	RaceID    string
+	ChannelID string
+	Game      string
+	Category  string
+	startTime string
 }
 
 // mongoDB connection stuff
-func monplayer(dbase string, collect string, players Players) {
+func mondb(dbase string, collect string) {
 	// Connecting to mongoDB
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 	fmt.Println("clientOptions type:", reflect.TypeOf(clientOptions))
@@ -60,30 +59,7 @@ func monplayer(dbase string, collect string, players Players) {
 		log.Fatal(err)
 	}
 	collection := client.Database(dbase).Collection(collect)
-
-	insertResult, err := collection.InsertOne(context.TODO(), players)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Inserted:", insertResult.InsertedID)
-}
-
-func monrace(dbase string, collect string, races Races) {
-	// Connecting to mongoDB
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	fmt.Println("clientOptions type:", reflect.TypeOf(clientOptions))
-
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	collection := client.Database(dbase).Collection(collect)
-	_, _ = collection.InsertOne(context.TODO(), races)
+	fmt.Println(collection)
 }
 
 func main() {
@@ -138,48 +114,34 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	// Set up Race
-	switch {
-
-	case strings.HasPrefix(m.Content, ".setup"):
+	if strings.HasPrefix(m.Content, ".setup") {
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".setup")
 		msgstr = strings.TrimSpace(msgstr)
-		msgarr := strings.Split(msgstr, ",")
-		if len(msgarr) <= 1 {
+		fmt.Println(msgstr)
+		if len(msgstr) >= 1 {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "You're missing either the game or the category of the race. run `.setup game name, category`")
-		} else {
+		} else if len(msgstr) >= 1 {
+			msgarr := strings.Split(msgstr, ",")
 			var arg1 = msgarr[0]
 			var arg2 = msgarr[1]
 			var raceid = randomString(4)
 			race = raceid
 			racestring := fmt.Sprintf("%s, has started race %s for %s in category %s.", "<"+"@"+m.Author.ID+">", raceid, strings.TrimSpace(arg1), strings.TrimSpace(arg2))
 			_, _ = s.ChannelMessageSend(m.ChannelID, racestring)
-			raceInsert := Races{race, m.ChannelID, strings.TrimSpace(arg1), strings.TrimSpace(arg2), time.Now()}
-			fmt.Println(raceInsert)
-			monrace("donnybrook", "races", raceInsert)
-		}
-	// Join Race
-	case strings.HasPrefix(m.Content, ".join"):
-		var msgstr = m.Content
-		msgstr = strings.TrimPrefix(msgstr, ".join")
-		raceID := strings.TrimSpace(msgstr)
-		if m.Author.ID == staticuser {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> You've already joined the race please wait for the race to start.")
-		} else if len(raceID) <=1 {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+">, I need your race ID also.")
-		} else if raceID != race {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry that race id does not exist")
-		} else {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+">"+" has joined the race.")
-			logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.Username)
-			fmt.Println(logstring)
-			player := Players {m.Author.ID, m.ChannelID,raceID, time.Now(), time.Now()}
-			monplayer("donnybrook", "players", player)
-
-
 		}
 	}
 	switch {
+	// Join Race
+	case m.Content == ".join":
+		if m.Author.ID == staticuser {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" You've already joined the race please wait for the race to start.")
+		} else {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has joined the race.")
+			logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.Username)
+			fmt.Println(logstring)
+
+		}
 	// Ready up for race
 	case m.Content == ".ready":
 		if m.Author.ID == staticuser {
