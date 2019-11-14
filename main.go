@@ -1,8 +1,9 @@
-package donnybrook
+package main
 
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"math/rand"
 	"os"
@@ -84,6 +85,33 @@ func monrace(dbase string, collect string, races Races) {
 	}
 	collection := client.Database(dbase).Collection(collect)
 	_, _ = collection.InsertOne(context.TODO(), races)
+}
+
+func monLookupPlayer(dbase string, collect string, RaceID string) {
+
+	filter := bson.D{{"RaceID", RaceID}}
+
+	var result Players
+	// Connecting to mongoDB
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	fmt.Println("clientOptions type:", reflect.TypeOf(clientOptions))
+
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	collection := client.Database(dbase).Collection(collect)
+	err = collection.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil{
+		log.Fatal(err)
+	}
+	fmt.Printf("Found it: \n", result)
 }
 
 func main() {
@@ -175,9 +203,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println(logstring)
 			player := Players {m.Author.ID, m.ChannelID,raceID, time.Now(), time.Now()}
 			monplayer("donnybrook", "players", player)
-
-
 		}
+	case strings.HasPrefix(m.Content, ".inrace"):
+		var msgstr = m.Content
+		msgstr = strings.TrimPrefix(msgstr, ".inrace")
+		raceID := strings.TrimSpace(msgstr)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "Check console, programmer lazy.")
+		monLookupPlayer("donnybrook", "players", raceID)
 	}
 	switch {
 	// Ready up for race
