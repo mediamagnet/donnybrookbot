@@ -3,18 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"math/rand"
 	"os"
 	"os/signal"
-	"reflect"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -30,6 +29,7 @@ var endtime1 = time.Now()
 // Players should have comment
 type Players struct {
 	Name      string    `bson:"Name"`
+	PlayerID  string    `bson:"PlayerID"`
 	ChannelID string    `bson:"ChannelID"`
 	RaceID    string    `bson:"RaceID"`
 	JoinTime  time.Time `bson:"Join Time,omitempty"`
@@ -45,20 +45,26 @@ type Races struct {
 	StartTime time.Time `bson:"Start Time"`
 }
 
-// mongoDB connection stuff
-func monplayer(dbase string, collect string, players Players) {
-	// Connecting to mongoDB
+// GetClient
+func GetClient() *mongo.Client {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	fmt.Println("clientOptions type:", reflect.TypeOf(clientOptions))
-
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	err = client.Ping(context.TODO(), nil)
+	err = client.Connect(context.Background())
 	if err != nil {
 		log.Fatal(err)
+	}
+	return client
+}
+// mongoDB connection stuff
+func monplayer(dbase string, collect string, players Players) {
+	// Connecting to mongoDB
+	client := GetClient()
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal("Couldn't connect to the database", err)
 	}
 	collection := client.Database(dbase).Collection(collect)
 
@@ -71,47 +77,50 @@ func monplayer(dbase string, collect string, players Players) {
 
 func monrace(dbase string, collect string, races Races) {
 	// Connecting to mongoDB
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	fmt.Println("clientOptions type:", reflect.TypeOf(clientOptions))
-
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	client := GetClient()
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Couldn't connect to the database", err)
 	}
 	collection := client.Database(dbase).Collection(collect)
 	_, _ = collection.InsertOne(context.TODO(), races)
 }
 
-func monLookupPlayer(dbase string, collect string, RaceID string) {
+func monReturnAllPlayers(client *mongo.Client, filter bson.M) []*Players {
 
-	filter := bson.D{{"RaceID", RaceID}}
-
-	var result Players
-	// Connecting to mongoDB
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	fmt.Println("clientOptions type:", reflect.TypeOf(clientOptions))
-
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+	var players []*Players
+	collection := client.Database("donnybrook").Collection("players")
+	cur, err := collection.Find(context.TODO(), filter)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Could not find document ", err)
+	}
+	for cur.Next(context.TODO()) {
+		var player Players
+		err = cur.Decode(&player)
+		if err != nil {
+			log.Fatal("Decode Error ", err)
+		}
+		players = append(players, &player)
+	}
+	return players
+}
+
+func monReturnOnePlayer(client *mongo.Client, filter bson.M) Players{
+	var player Players
+	collection := client.Database("donnybrook").Collection("players")
+	docuReturned := collection.FindOne(context.TODO(), filter)
+	_ = docuReturned.Decode(&player)
+	return player
+}
+
+func contains(slice []string, item string) bool {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
 	}
 
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	collection := client.Database(dbase).Collection(collect)
-	err = collection.FindOne(context.TODO(), filter).Decode(&result)
-	if err != nil{
-		log.Fatal(err)
-	}
-	fmt.Printf("Found it: \n", result)
+	_, ok := set[item]
+	return ok
 }
 
 func main() {
@@ -159,7 +168,6 @@ func randomString(len int) string {
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-
 	// Test to make sure bot isn't talking to self.
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -188,10 +196,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	// Join Race
 	case strings.HasPrefix(m.Content, ".join"):
+		c := GetClient()
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".join")
 		raceID := strings.TrimSpace(msgstr)
-		if m.Author.ID == staticuser {
+		playerLookup := monReturnOnePlayer(c, bson.M{"PlayerID": m.Author.ID})
+		if contains(playerLookup, m.Author.ID) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> You've already joined the race please wait for the race to start.")
 		} else if len(raceID) <=1 {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+">, I need your race ID also.")
@@ -201,15 +211,24 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+">"+" has joined the race.")
 			logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.Username)
 			fmt.Println(logstring)
-			player := Players {m.Author.ID, m.ChannelID,raceID, time.Now(), time.Now()}
+			player := Players {m.Author.Username,m.Author.ID, m.ChannelID,raceID, time.Now(), time.Now()}
 			monplayer("donnybrook", "players", player)
 		}
 	case strings.HasPrefix(m.Content, ".inrace"):
+		c := GetClient()
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".inrace")
 		raceID := strings.TrimSpace(msgstr)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "Check console, programmer lazy.")
-		monLookupPlayer("donnybrook", "players", raceID)
+		if len(raceID) <=1 {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+">, I need the race ID also.")
+		} else {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Players in the race are: ")
+			enteredPlayers := monReturnAllPlayers(c, bson.M{"RaceID": raceID})
+			for _, player := range enteredPlayers {
+				msgString := fmt.Sprintf("Name: %s, Channel: %s, Race: %s", player.Name, player.ChannelID, player.RaceID)
+				_, _ = s.ChannelMessageSend(m.ChannelID, msgString)
+			}
+		}
 	}
 	switch {
 	// Ready up for race
