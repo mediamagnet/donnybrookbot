@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -58,6 +59,7 @@ func GetClient() *mongo.Client {
 	}
 	return client
 }
+
 // mongoDB connection stuff
 func monplayer(dbase string, collect string, players Players) {
 	// Connecting to mongoDB
@@ -105,7 +107,7 @@ func monReturnAllPlayers(client *mongo.Client, filter bson.M) []*Players {
 	return players
 }
 
-func monReturnOnePlayer(client *mongo.Client, filter bson.M) Players{
+func monReturnOnePlayer(client *mongo.Client, filter bson.M) Players {
 	var player Players
 	collection := client.Database("donnybrook").Collection("players")
 	docuReturned := collection.FindOne(context.TODO(), filter)
@@ -167,7 +169,54 @@ func randomString(len int) string {
 	return string(bytes)
 }
 
+func MemberHasPermission(s *discordgo.Session, guildID string, userID string, permission int) bool {
+	member, err := s.State.Member(guildID, userID)
+	if err != nil {
+		if member, err = s.GuildMember(guildID, userID); err != nil {
+			return false
+		}
+	}
+
+	// Iterate through the role IDs stored in member.Roles
+	// to check permissions
+	for _, roleID := range member.Roles {
+		role, err := s.State.Role(guildID, roleID)
+		if err != nil {
+			return false
+		}
+		if role.Permissions&permission != 0 {
+			return true
+		}
+	}
+
+	return false
+}
+
+func findUserVoiceState(session *discordgo.Session, userid string) (*discordgo.VoiceState, error) {
+	for _, guild := range session.State.Guilds {
+		for _, vs := range guild.VoiceStates {
+			if vs.UserID == userid {
+				return vs, nil
+			}
+		}
+	}
+	return nil, errors.New("Could not find user's voice state")
+}
+
+func joinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo.VoiceConnection, error) {
+	// Find a user's current voice channel
+	vs, err := findUserVoiceState(session, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Join the user's channel and start unmuted and deafened.
+	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, false)
+}
+
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	_ =  s.UpdateListeningStatus("Background Stellar Radiation.")
+
 	// Test to make sure bot isn't talking to self.
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -193,17 +242,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			raceInsert := Races{race, m.ChannelID, strings.TrimSpace(arg1), strings.TrimSpace(arg2), time.Now()}
 			fmt.Println(raceInsert)
 			monrace("donnybrook", "races", raceInsert)
+
 		}
 	// Join Race
 	case strings.HasPrefix(m.Content, ".join"):
-		c := GetClient()
+		// c := GetClient()
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".join")
 		raceID := strings.TrimSpace(msgstr)
-		playerLookup := monReturnOnePlayer(c, bson.M{"PlayerID": m.Author.ID})
-		if contains(playerLookup, m.Author.ID) {
+		// playerLookup := monReturnOnePlayer(c, bson.M{"PlayerID": m.Author.ID})
+		playerLookup := staticuser
+		if playerLookup == m.Author.ID {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> You've already joined the race please wait for the race to start.")
-		} else if len(raceID) <=1 {
+		} else if len(raceID) <= 1 {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+">, I need your race ID also.")
 		} else if raceID != race {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry that race id does not exist")
@@ -211,7 +262,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+">"+" has joined the race.")
 			logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.Username)
 			fmt.Println(logstring)
-			player := Players {m.Author.Username,m.Author.ID, m.ChannelID,raceID, time.Now(), time.Now()}
+			player := Players{m.Author.Username, m.Author.ID, m.ChannelID, raceID, time.Now(), time.Now()}
 			monplayer("donnybrook", "players", player)
 		}
 	case strings.HasPrefix(m.Content, ".inrace"):
@@ -219,7 +270,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".inrace")
 		raceID := strings.TrimSpace(msgstr)
-		if len(raceID) <=1 {
+		if len(raceID) <= 1 {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+">, I need the race ID also.")
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Players in the race are: ")
@@ -228,6 +279,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				msgString := fmt.Sprintf("Name: %s, Channel: %s, Race: %s", player.Name, player.ChannelID, player.RaceID)
 				_, _ = s.ChannelMessageSend(m.ChannelID, msgString)
 			}
+
 		}
 	}
 	switch {
@@ -267,30 +319,75 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has forfeit the race, hope you join us for the next race!")
 	// Help text
 	case m.Content == ".help":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 			Title: "Donnybrook Help:",
+			Author: &discordgo.MessageEmbedAuthor{
+				URL:     "https://donnybrookbot.xyz",
+				Name:    "Donnybrook",
+				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128"},
 			Thumbnail: &discordgo.MessageEmbedThumbnail{
 				URL:    "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128",
 				Width:  128,
 				Height: 128,
 			},
-			Description: "Welcome to the Donnybrook Race bot to get started use: `.setup` to create a race. \n" +
-				"Example: ```.setup A Link to the Past, Any%``` \n" +
-				"`.join` - Join the race. \n" +
-				"`.ready` - Ready up for the race. \n " +
-				"`.unready` - Unready from the race. \n" +
-				"`.start` - Start the race once everyone is ready. \n" +
-				"`.done` - You finished the race. \n" +
-				"`.forfeit` - Leave the race early.\n" +
-				"`.help` - You're reading it.",
 			Color: 0x550000,
+			Description: "Welcome to the Donnybrook Race bot Here's some useful commands: \n",
+			Fields: []*discordgo.MessageEmbedField{
+				{Name:   ".setup Game, Category", Value:  "Setup a race"},
+				{Name: ".join <race id>", Value: "Join a race with the specified id"},
+				{Name: ".ready", Value: "Ready up for the race after you're done setting up"},
+				{Name: ".unready", Value: "Leave the ready state for the race."},
+				{Name: ".start", Value: "Once everyone is ready start the race."},
+				{Name: ".done", Value: "Once you finish the race use this."},
+				{Name: ".forfeit", Value: "Not able to keep going use this to exit the race."},
+				{Name: ".help", Value: "You're reading it."},
+				{Name: "v.join", Value: "Join a voice channel for voiced countdown. Must be in voice channel for this to work. [WIP]"},
+				{Name: "v.leave", Value: "Leave the voice channel"},
+				{Name: "a.cleanup", Value: "Cleans messages in channel command is run in. User must have `Mannage Message` permissions."}},
+			Footer: &discordgo.MessageEmbedFooter{
+				Text:    slogan,
+				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
+	case m.Content == ".helf":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_, _ = s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+			Title: "Donnybrook Helf:",
 			Author: &discordgo.MessageEmbedAuthor{
 				URL:     "https://donnybrookbot.xyz",
 				Name:    "Donnybrook",
 				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128"},
+			Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL:    "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128",
+				Width:  128,
+				Height: 128,
+			},
+			Color: 0x550000,
+			Description: "Hmm, never mind.",
+			Image: &discordgo.MessageEmbedImage{
+				URL:      "https://i.imgur.com/d86T9Mw.png",
+				ProxyURL: "https://i.imgur.com/d86T9Mw.png",
+				Width:    428,
+				Height:   559,
+			},
 			Footer: &discordgo.MessageEmbedFooter{
 				Text:    slogan,
 				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
+	case m.Content == "v.join":
+		_, _ = joinUserVoiceChannel(s, m.Author.ID)
+	case m.Content == "v.leave":
+		_ = s.Close()
+	case m.Content == "a.cleanup":
+		if MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageMessages) {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Deleting messages in <#"+m.ChannelID+">")
+			time.Sleep(5 * time.Second)
+			for i := 0; i < 100; i++ {
+				messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+				_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
+			}
+		} else {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run a.cleanup")
+		}
 	}
-
 }
+
+
