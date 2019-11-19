@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	"github.com/jonas747/dca"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -138,7 +141,10 @@ func main() {
 		return
 	}
 
-	
+	encodeSession := dca.EncodeFile("media/racestart.mp3", dca.StdEncodeOptions)
+	defer encodeSession.Cleanup()
+
+	output, err := os.Create("output.dca")
 
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
@@ -203,6 +209,26 @@ func joinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo
 	}
 	//
 	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, false)
+}
+
+func readOpus(source io.Reader) ([]byte, error) {
+	var opuslen int16
+	err := binary.Read(source, binary.LittleEndian, &opuslen)
+	if err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			return nil, err
+			}
+			return nil, errors.New("ERR reading opus header")
+	}
+	var opusframe = make([]byte, opuslen)
+	err = binary.Read(source,binary.LittleEndian, &opusframe)
+	if err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			return nil, err
+		}
+		return nil, errors.New("Err reading opus frame")
+	}
+	return opusframe, nil
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {

@@ -1,0 +1,74 @@
+hash: 79182333de4d1382cf1f1143ac3958103e7d274f30888b4c8640be36baafaeb5
+updated: 2019-11-18T19:58:20.7355636-06:00
+imports:
+- name: github.com/bwmarrin/discordgo
+  version: dd99dea7adba674baa401e52362d6e330b50acf8
+- name: github.com/go-stack/stack
+  version: 2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a
+- name: github.com/golang/snappy
+  version: ff6b7dc882cf4cfba7ee0b9f7dcc1ac096c554aa
+- name: github.com/gorilla/websocket
+  version: c3e18be99d19e6b3e8f1559eea2c161a665c4b6b
+- name: github.com/joho/godotenv
+  version: 23d116af351c84513e1946b527c88823e476be13
+- name: github.com/jonas747/dca
+  version: 10e959e9d3e808cd961308760de0c1c36285fed7
+- name: github.com/jonas747/ogg
+  version: b4f6f4cf3757a3bf88eae9222045b99b9d76d8ca
+- name: github.com/xdg/scram
+  version: 7eeb5667e42c09cb51bf7b7c28aea8c56767da90
+- name: github.com/xdg/stringprep
+  version: 73f8eece6fdcd902c185bf651de50f3828bed5ed
+- name: go.mongodb.org/mongo-driver
+  version: 797e0a635920c291b1808180bf7249eaac5eafed
+  subpackages:
+  - bson
+  - bson/bsoncodec
+  - bson/bsonrw
+  - bson/bsontype
+  - bson/primitive
+  - event
+  - internal
+  - mongo
+  - mongo/options
+  - mongo/readconcern
+  - mongo/readpref
+  - mongo/writeconcern
+  - tag
+  - version
+  - x/bsonx
+  - x/bsonx/bsoncore
+  - x/mongo/driver
+  - x/mongo/driver/address
+  - x/mongo/driver/auth
+  - x/mongo/driver/auth/internal/gssapi
+  - x/mongo/driver/connstring
+  - x/mongo/driver/description
+  - x/mongo/driver/dns
+  - x/mongo/driver/operation
+  - x/mongo/driver/session
+  - x/mongo/driver/topology
+  - x/mongo/driver/uuid
+  - x/mongo/driver/wiremessage
+- name: golang.org/x/crypto
+  version: 497ca9f6d64f9bb73048a960b4098309edcd2205
+  subpackages:
+  - internal/subtle
+  - nacl/secretbox
+  - pbkdf2
+  - poly1305
+  - salsa20/salsa
+- name: golang.org/x/sync
+  version: cd5d95a43a6e21273425c7ae415d3df9ea832eeb
+  subpackages:
+  - semaphore
+- name: golang.org/x/sys
+  version: cf1e2d57716972ea102acf35e82471062c8906a1
+  subpackages:
+  - cpu
+- name: golang.org/x/text
+  version: 4b67af870c6ffd08258ef1202f371aebccaf7b68
+  subpackages:
+  - transform
+  - unicode/norm
+testImports: []
