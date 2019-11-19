@@ -117,15 +117,26 @@ func monReturnOnePlayer(client *mongo.Client, filter bson.M) Players {
 	return player
 }
 
-func voiceChannels(s *discordgo.Session) string {
-	for _, guild := range s.State.Guilds {
-		channels, _ := s.GuildChannels(guild.ID)
+func voiceChannels(s *discordgo.Session, guildID string) []string {
+	channels, _ := s.GuildChannels(guildID)
+	for _, c := range channels {
+		if c.Type != discordgo.ChannelTypeGuildVoice {
+			continue
+		}
+		chanString := fmt.Sprintf("%s", c.ID)
+		chanSlice := strings.Fields(chanString)
+		return chanSlice
 
-		for _, c := range channels {
-			if c.Type == discordgo.ChannelTypeGuildVoice {
-				chanString := fmt.Sprintf("%s", c.ID)
-				return chanString
-			}
+	}
+	return nil
+}
+
+func ChannelIDFromName(s *discordgo.Session, guildID string, channelName string) string {
+	channels, _ := s.GuildChannels(guildID)
+
+	for _, c := range channels {
+		if c.Name == channelName {
+			return c.ID
 		}
 	}
 	return ""
@@ -353,148 +364,144 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		//	choosen := vChans[rand.Intn(len(vChans))]
 		//	s.GuildMemberMove(m.GuildID,,choosen)
 		//
-		}
-		switch {
-		// Ready up for race
-		case m.Content == ".ready":
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			if m.Author.ID == staticuser {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" You've already readied up for the race if you need to leave use `.unready`.")
-			} else {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" is ready.")
-			}
-		// unready
-		case m.Content == ".unready":
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has left ready status, please ready up again when able.")
-		// Start Race once all ready
-		case m.Content == ".start":
-
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			voice, _ := joinUserVoiceChannel(s, m.Author.ID)
-			_, _ = s.ChannelMessageSend(m.ChannelID, "All racers have readied")
-			time.Sleep(1 * time.Second)
-			go s.ChannelMessageSend(m.ChannelID, "Starting in \n3.")
-			go PlayAudioFile(voice, "media/racestart.mp3")
-			time.Sleep(1 * time.Second)
-			_, _ = s.ChannelMessageSend(m.ChannelID, "2.")
-			time.Sleep(1 * time.Second)
-			_, _ = s.ChannelMessageSend(m.ChannelID, "1.")
-			time.Sleep(1 * time.Second)
-			_, _ = s.ChannelMessageSend(m.ChannelID, "Go!")
-
-			starttime1 = time.Now()
-			var starttime = starttime1.Truncate(1 * time.Millisecond)
-			racestring := fmt.Sprintf("%s, %s, %s", m.ChannelID, race, starttime)
-			fmt.Println(racestring)
-
-		// You finish the Race
-		case m.Content == ".done":
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			var time2 = time.Now()
-			var endtime1 = time2.Sub(starttime1)
-			var endtime = endtime1.Truncate(1 * time.Millisecond)
-			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has finished the race in: "+endtime.String())
-		// Quit the race
-		case m.Content == ".forfeit":
-			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has forfeit the race, hope you join us for the next race!")
-		// Help text
-		case m.Content == ".help":
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			_, _ = s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
-				Title: "Donnybrook Help:",
-				Author: &discordgo.MessageEmbedAuthor{
-					URL:     "https://donnybrookbot.xyz",
-					Name:    "Donnybrook",
-					IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128"},
-				Thumbnail: &discordgo.MessageEmbedThumbnail{
-					URL:    "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128",
-					Width:  128,
-					Height: 128,
-				},
-				Color:       0x550000,
-				Description: "Welcome to the Donnybrook Race bot Here's some useful commands: \n",
-				Fields: []*discordgo.MessageEmbedField{
-					{Name: ".setup Game, Category", Value: "Setup a race"},
-					{Name: ".join <race id>", Value: "Join a race with the specified id"},
-					{Name: ".ready", Value: "Ready up for the race after you're done setting up"},
-					{Name: ".unready", Value: "Leave the ready state for the race."},
-					{Name: ".start", Value: "Once everyone is ready start the race."},
-					{Name: ".done", Value: "Once you finish the race use this."},
-					{Name: ".forfeit", Value: "Not able to keep going use this to exit the race."},
-					{Name: ".help", Value: "You're reading it."},
-					{Name: "v.join", Value: "Join a voice channel for voiced countdown. Must be in voice channel for this to work. [WIP]"},
-					{Name: "v.leave", Value: "Leave the voice channel"},
-					{Name: "a.cleanup", Value: "Cleans messages in channel command is run in. User must have `Mannage Message` permissions."}},
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    slogan,
-					IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
-		// Helf text
-		case m.Content == ".helf":
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			_, _ = s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
-				Title: "Donnybrook Helf:",
-				Author: &discordgo.MessageEmbedAuthor{
-					URL:     "https://donnybrookbot.xyz",
-					Name:    "Donnybrook",
-					IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128"},
-				Thumbnail: &discordgo.MessageEmbedThumbnail{
-					URL:    "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128",
-					Width:  128,
-					Height: 128,
-				},
-				Color:       0x550000,
-				Description: "Hmm, never mind.",
-				Image: &discordgo.MessageEmbedImage{
-					URL:      "https://i.imgur.com/d86T9Mw.png",
-					ProxyURL: "https://i.imgur.com/d86T9Mw.png",
-					Width:    428,
-					Height:   559,
-				},
-				Footer: &discordgo.MessageEmbedFooter{
-					Text:    slogan,
-					IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
-		// Join voice
-		case m.Content == "v.join":
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			_, _ = joinUserVoiceChannel(s, m.Author.ID)
-		// Leave voice
-		case m.Content == "v.leave":
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
-		// Clean up channel currently in.
-		case m.Content == "a.cleanup":
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			if MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageMessages|discordgo.PermissionAdministrator) {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "Deleting messages in <#"+m.ChannelID+">")
-				msgCount, _ := s.ChannelMessages(m.ChannelID, 100, "", "", "")
-				time.Sleep(5 * time.Second)
-				if len(msgCount) == 100 {
-					for i := 0; i < 100; i++ {
-						messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
-						_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
-						time.Sleep(5 * time.Millisecond)
-					}
-				} else if len(msgCount) <= 99 {
-					for i := 0; i < len(msgCount); i++ {
-						messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
-						_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
-						time.Sleep(5 * time.Millisecond)
-					}
-				}
-			} else {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run a.cleanup")
-			}
-		case m.Content == "a.lookup":
-
-			fmt.Println(findAllVoiceState(s))
-
-		// Bees
-		case m.Content == "b.swarm":
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			_, _ = s.ChannelMessageSend(m.ChannelID, "\n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n ")
-		}
 	}
+	switch {
+	// Ready up for race
+	case m.Content == ".ready":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		if m.Author.ID == staticuser {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" You've already readied up for the race if you need to leave use `.unready`.")
+		} else {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" is ready.")
+		}
+	// unready
+	case m.Content == ".unready":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has left ready status, please ready up again when able.")
+	// Start Race once all ready
+	case m.Content == ".start":
+
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		voice, _ := joinUserVoiceChannel(s, m.Author.ID)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "All racers have readied")
+		time.Sleep(1 * time.Second)
+		go s.ChannelMessageSend(m.ChannelID, "Starting in \n3.")
+		go PlayAudioFile(voice, "media/racestart.mp3")
+		time.Sleep(1 * time.Second)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "2.")
+		time.Sleep(1 * time.Second)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "1.")
+		time.Sleep(1 * time.Second)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "Go!")
+
+		starttime1 = time.Now()
+		var starttime = starttime1.Truncate(1 * time.Millisecond)
+		racestring := fmt.Sprintf("%s, %s, %s", m.ChannelID, race, starttime)
+		fmt.Println(racestring)
+
+	// You finish the Race
+	case m.Content == ".done":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		var time2 = time.Now()
+		var endtime1 = time2.Sub(starttime1)
+		var endtime = endtime1.Truncate(1 * time.Millisecond)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has finished the race in: "+endtime.String())
+	// Quit the race
+	case m.Content == ".forfeit":
+		_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has forfeit the race, hope you join us for the next race!")
+	// Help text
+	case m.Content == ".help":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_, _ = s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+			Title: "Donnybrook Help:",
+			Author: &discordgo.MessageEmbedAuthor{
+				URL:     "https://donnybrookbot.xyz",
+				Name:    "Donnybrook",
+				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128"},
+			Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL:    "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128",
+				Width:  128,
+				Height: 128,
+			},
+			Color:       0x550000,
+			Description: "Welcome to the Donnybrook Race bot Here's some useful commands: \n",
+			Fields: []*discordgo.MessageEmbedField{
+				{Name: ".setup Game, Category", Value: "Setup a race"},
+				{Name: ".join <race id>", Value: "Join a race with the specified id"},
+				{Name: ".ready", Value: "Ready up for the race after you're done setting up"},
+				{Name: ".unready", Value: "Leave the ready state for the race."},
+				{Name: ".start", Value: "Once everyone is ready start the race."},
+				{Name: ".done", Value: "Once you finish the race use this."},
+				{Name: ".forfeit", Value: "Not able to keep going use this to exit the race."},
+				{Name: ".help", Value: "You're reading it."},
+				{Name: "v.join", Value: "Join a voice channel for voiced countdown. Must be in voice channel for this to work. [WIP]"},
+				{Name: "v.leave", Value: "Leave the voice channel"},
+				{Name: "a.cleanup", Value: "Cleans messages in channel command is run in. User must have `Mannage Message` permissions."}},
+			Footer: &discordgo.MessageEmbedFooter{
+				Text:    slogan,
+				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
+	// Helf text
+	case m.Content == ".helf":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_, _ = s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+			Title: "Donnybrook Helf:",
+			Author: &discordgo.MessageEmbedAuthor{
+				URL:     "https://donnybrookbot.xyz",
+				Name:    "Donnybrook",
+				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128"},
+			Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL:    "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128",
+				Width:  128,
+				Height: 128,
+			},
+			Color:       0x550000,
+			Description: "Hmm, never mind.",
+			Image: &discordgo.MessageEmbedImage{
+				URL:      "https://i.imgur.com/d86T9Mw.png",
+				ProxyURL: "https://i.imgur.com/d86T9Mw.png",
+				Width:    428,
+				Height:   559,
+			},
+			Footer: &discordgo.MessageEmbedFooter{
+				Text:    slogan,
+				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
+	// Join voice
+	case m.Content == "v.join":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_, _ = joinUserVoiceChannel(s, m.Author.ID)
+	// Leave voice
+	case m.Content == "v.leave":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
+	// Clean up channel currently in.
+	case m.Content == "a.cleanup":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		if MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageMessages|discordgo.PermissionAdministrator) {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Deleting messages in <#"+m.ChannelID+">")
+			msgCount, _ := s.ChannelMessages(m.ChannelID, 100, "", "", "")
+			time.Sleep(5 * time.Second)
+			if len(msgCount) == 100 {
+				for i := 0; i < 100; i++ {
+					messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
+					time.Sleep(5 * time.Millisecond)
+				}
+			} else if len(msgCount) <= 99 {
+				for i := 0; i < len(msgCount); i++ {
+					messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
+					time.Sleep(5 * time.Millisecond)
+				}
+			}
+		} else {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run a.cleanup")
+		}
+	// Bees
+	case m.Content == "b.swarm":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "\n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n ")
+	}
+}
 
 
 
