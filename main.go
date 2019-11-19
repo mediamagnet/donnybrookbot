@@ -61,7 +61,7 @@ func GetClient() *mongo.Client {
 }
 
 // mongoDB connection stuff
-func monplayer(dbase string, collect string, players Players) {
+func monPlayer(dbase string, collect string, players Players) {
 	// Connecting to mongoDB
 	client := GetClient()
 	err = client.Ping(context.TODO(), nil)
@@ -77,7 +77,7 @@ func monplayer(dbase string, collect string, players Players) {
 	fmt.Println("Inserted:", insertResult.InsertedID)
 }
 
-func monrace(dbase string, collect string, races Races) {
+func monRace(dbase string, collect string, races Races) {
 	// Connecting to mongoDB
 	client := GetClient()
 	err = client.Ping(context.TODO(), nil)
@@ -115,16 +115,6 @@ func monReturnOnePlayer(client *mongo.Client, filter bson.M) Players {
 	return player
 }
 
-func contains(slice []string, item string) bool {
-	set := make(map[string]struct{}, len(slice))
-	for _, s := range slice {
-		set[s] = struct{}{}
-	}
-
-	_, ok := set[item]
-	return ok
-}
-
 func main() {
 	// Load .env files
 	err := godotenv.Load()
@@ -147,6 +137,8 @@ func main() {
 		log.Fatal("Error opening connection,", err)
 		return
 	}
+
+	
 
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
@@ -209,13 +201,12 @@ func joinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo
 	if err != nil {
 		return nil, err
 	}
-
-	// Join the user's channel and start unmuted and deafened.
+	//
 	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, false)
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	_ =  s.UpdateListeningStatus("Background Stellar Radiation.")
+
 
 	// Test to make sure bot isn't talking to self.
 	if m.Author.ID == s.State.User.ID {
@@ -226,6 +217,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch {
 
 	case strings.HasPrefix(m.Content, ".setup"):
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".setup")
 		msgstr = strings.TrimSpace(msgstr)
@@ -241,11 +233,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, racestring)
 			raceInsert := Races{race, m.ChannelID, strings.TrimSpace(arg1), strings.TrimSpace(arg2), time.Now()}
 			fmt.Println(raceInsert)
-			monrace("donnybrook", "races", raceInsert)
+			monRace("donnybrook", "races", raceInsert)
 
 		}
 	// Join Race
 	case strings.HasPrefix(m.Content, ".join"):
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		// c := GetClient()
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".join")
@@ -263,9 +256,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.Username)
 			fmt.Println(logstring)
 			player := Players{m.Author.Username, m.Author.ID, m.ChannelID, raceID, time.Now(), time.Now()}
-			monplayer("donnybrook", "players", player)
+			monPlayer("donnybrook", "players", player)
 		}
 	case strings.HasPrefix(m.Content, ".inrace"):
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		c := GetClient()
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".inrace")
@@ -285,6 +279,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch {
 	// Ready up for race
 	case m.Content == ".ready":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		if m.Author.ID == staticuser {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" You've already readied up for the race if you need to leave use `.unready`.")
 		} else {
@@ -292,9 +287,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	// unready
 	case m.Content == ".unready":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has left ready status, please ready up again when able.")
 	// Start Race once all ready
 	case m.Content == ".start":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = s.ChannelMessageSend(m.ChannelID, "All racers have readied")
 		time.Sleep(1 * time.Second)
 		_, _ = s.ChannelMessageSend(m.ChannelID, "Starting in 3.")
@@ -310,6 +307,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		fmt.Println(racestring)
 	// You finish the Race
 	case m.Content == ".done":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var time2 = time.Now()
 		var endtime1 = time2.Sub(starttime1)
 		var endtime = endtime1.Truncate(1 * time.Millisecond)
@@ -334,7 +332,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			Color: 0x550000,
 			Description: "Welcome to the Donnybrook Race bot Here's some useful commands: \n",
 			Fields: []*discordgo.MessageEmbedField{
-				{Name:   ".setup Game, Category", Value:  "Setup a race"},
+				{Name: ".setup Game, Category", Value:  "Setup a race"},
 				{Name: ".join <race id>", Value: "Join a race with the specified id"},
 				{Name: ".ready", Value: "Ready up for the race after you're done setting up"},
 				{Name: ".unready", Value: "Leave the ready state for the race."},
@@ -348,6 +346,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			Footer: &discordgo.MessageEmbedFooter{
 				Text:    slogan,
 				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
+	// Helf text
 	case m.Content == ".helf":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
@@ -372,21 +371,41 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			Footer: &discordgo.MessageEmbedFooter{
 				Text:    slogan,
 				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
+	// Join voice
 	case m.Content == "v.join":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = joinUserVoiceChannel(s, m.Author.ID)
+	// Leave voice
 	case m.Content == "v.leave":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_ = s.Close()
+	// Clean up channel currently in.
 	case m.Content == "a.cleanup":
-		if MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageMessages) {
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		if MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageMessages|discordgo.PermissionAdministrator) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Deleting messages in <#"+m.ChannelID+">")
+			msgCount, _ := s.ChannelMessages(m.ChannelID, 100, "","","")
 			time.Sleep(5 * time.Second)
-			for i := 0; i < 100; i++ {
-				messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
-				_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
+			if len(msgCount) == 100 {
+				for i := 0; i < 100; i++ {
+					messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
+					time.Sleep(5 * time.Millisecond)
+				}
+			} else if len(msgCount) <= 99 {
+				for i := 0; i < len(msgCount); i++ {
+					messages, _ := s.ChannelMessages(m.ChannelID, 1,"","","")
+					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
+					time.Sleep(5 * time.Millisecond)
+				}
 			}
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run a.cleanup")
 		}
+	// Bees
+	case m.Content == "b.swarm":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_, _ = s.ChannelMessageSend(m.ChannelID, "\n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n ")
 	}
 }
 
