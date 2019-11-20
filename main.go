@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -119,16 +118,14 @@ func monReturnOnePlayer(client *mongo.Client, filter bson.M) Players {
 
 func voiceChannels(s *discordgo.Session, guildID string) []string {
 	channels, _ := s.GuildChannels(guildID)
+	chanSlice := make([]string, 1)
 	for _, c := range channels {
-		if c.Type != discordgo.ChannelTypeGuildVoice {
-			continue
+		if c.Type == discordgo.ChannelTypeGuildVoice {
+			chanID := fmt.Sprintf("%s", c.ID)
+			chanSlice = append(chanSlice, chanID)
 		}
-		chanString := fmt.Sprintf("%s", c.ID)
-		chanSlice := strings.Fields(chanString)
-		return chanSlice
-
 	}
-	return nil
+	return chanSlice
 }
 
 func ChannelIDFromName(s *discordgo.Session, guildID string, channelName string) string {
@@ -209,32 +206,32 @@ func MemberHasPermission(s *discordgo.Session, guildID string, userID string, pe
 	return false
 }
 
-func findUserVoiceState(session *discordgo.Session, userid string) (*discordgo.VoiceState, error) {
+func findUserVoiceState(session *discordgo.Session, userID string) *discordgo.VoiceState {
 	for _, guild := range session.State.Guilds {
 		for _, vs := range guild.VoiceStates {
-			if vs.UserID == userid {
-				return vs, nil
+			if vs.UserID == userID {
+				return vs
 			}
 		}
 	}
-	return nil, errors.New("could not find user's voice state")
+	return nil
 }
 
-func findAllVoiceState(session *discordgo.Session) (string, error) {
+func findAllVoiceState(session *discordgo.Session) []string {
+	vString := make([]string, 1)
 	for _, guild := range session.State.Guilds {
 		for _, vs := range guild.VoiceStates {
-			vString := fmt.Sprintf("%s", vs)
-			return vString, nil
+			vString = append(vString, vs.UserID)
 		}
 	}
-	return "", errors.New("could not find user's voice state")
+	return vString
 }
 
 func joinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo.VoiceConnection, error) {
 	// Find a user's current voice channel
-	vs, err := findUserVoiceState(session, userID)
+	vs := findUserVoiceState(session, userID)
 	if err != nil {
-		return nil, err
+		log.Fatal("Error")
 	}
 	//
 	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, false)
@@ -352,18 +349,21 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 
 		}
-		//case strings.HasPrefix(m.Content, "a.scatter"):
-		//	_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		//	var msgstr = m.Content
-		//	msgstr = strings.TrimPrefix(msgstr, "a.scatter")
-		//	channelName := strings.TrimSpace(msgstr)
-		//	rand.Seed(time.Now().UnixNano())
-		//	s.Guild
-		//
-		//	vChans := strings.Fields(voiceChannels(s))
-		//	choosen := vChans[rand.Intn(len(vChans))]
-		//	s.GuildMemberMove(m.GuildID,,choosen)
-		//
+		case strings.HasPrefix(m.Content, "a.scatter"):
+			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+			var msgstr = m.Content
+			msgstr = strings.TrimPrefix(msgstr, "a.scatter")
+			rand.Seed(time.Now().UnixNano())
+			vUsers :=  findAllVoiceState(s)
+			vChan := voiceChannels(s, m.GuildID)
+			choiceChan := vChan[rand.Intn(len(vChan))]
+			choiceUser := vUsers[rand.Intn(len(vUsers))]
+			for i := 0; i <= len(vUsers)-1 ; i++ {
+				fmt.Println(vUsers[i])
+				fmt.Println(vChan[i])
+				_ = s.GuildMemberMove(m.GuildID, choiceUser, choiceChan)
+			}
+
 	}
 	switch {
 	// Ready up for race
@@ -496,10 +496,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run a.cleanup")
 		}
+	case m.Content == "a.lookup":
+		vChannels := voiceChannels(s, m.GuildID)
+		vStates := fmt.Sprintf("%v, %v", findAllVoiceState(s), vChannels)
+		_, _ = s.ChannelMessageSend(m.ChannelID, vStates)
 	// Bees
 	case m.Content == "b.swarm":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "\n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n :bee: :bee: :bee: :bee: \n ")
+		_, _ = s.ChannelMessageSend(m.ChannelID, "\n :bee: :bee: :bee: :bee: \n " +
+			":bee: :bee: :bee: :bee: \n " +
+			":bee: :bee: :bee: :bee: \n " +
+			":bee: :bee: :bee: :bee: \n ")
 	}
 }
 
