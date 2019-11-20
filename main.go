@@ -353,16 +353,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 			var msgstr = m.Content
 			msgstr = strings.TrimPrefix(msgstr, "a.scatter")
-			rand.Seed(time.Now().UnixNano())
-			vUsers :=  findAllVoiceState(s)
+			rand.Seed(time.Now().Unix())
+			vUsers := findAllVoiceState(s)
 			vChan := voiceChannels(s, m.GuildID)
-			choiceChan := vChan[rand.Intn(len(vChan))]
-			choiceUser := vUsers[rand.Intn(len(vUsers))]
-			for i := 0; i <= len(vUsers)-1 ; i++ {
-				fmt.Println(vUsers[i])
-				fmt.Println(vChan[i])
-				_ = s.GuildMemberMove(m.GuildID, choiceUser, choiceChan)
+			for i := 0; i <= len(vUsers)-1; i++ {
+				choiceChan := vChan[i]
+				choiceUser := vUsers[i]
+				// _ = s.GuildMemberMove(m.GuildID, choiceUser, choiceChan)
+				_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("I would have moved <@%s> to <#%s>", choiceUser, choiceChan))
+				time.Sleep(1 * time.Second)
 			}
+
 
 	}
 	switch {
