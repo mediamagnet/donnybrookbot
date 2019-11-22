@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -27,6 +28,7 @@ var slogan = "Donnybrook - Because sometimes fast needs to be quantified."
 var race string
 var starttime1 = time.Now()
 var endtime1 = time.Now()
+var wg sync.WaitGroup
 
 // Players should have comment
 type Players struct {
@@ -367,6 +369,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		}
 	case strings.HasPrefix(m.Content, "a.scatter"):
+		voice, _ := joinUserVoiceChannel(s, m.Author.ID)
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var msgstr = m.Content
 		var msgarr = make([]string, 1)
@@ -375,22 +378,25 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		fmt.Println(msgarr)
 		rand.Seed(time.Now().Unix())
 		vUsers := findAllVoiceState(s)
+		wg.Add(len(vUsers))
 		// vChan := voiceChannels(s, m.GuildID)
+		PlayAudioFile(voice, "media/scatter.mp3")
 		for i := 0; i <= len(vUsers)-1; i++ {
-			vChan := rand.Intn(len(msgarr))
-			pickedChan := ChannelIDFromName(s, m.GuildID, msgarr[vChan])
-			choiceUser := vUsers[i]
-			fmt.Println(pickedChan)
-			if choiceUser == "" {
-				continue
-			}
-			vChan = rand.Intn(len(msgarr))
-			pickedChan = ChannelIDFromName(s, m.GuildID, msgarr[vChan])
+			go func(i int) {
+				defer wg.Done()
+				vChan := rand.Intn(len(msgarr))
+				pickedChan := ChannelIDFromName(s, m.GuildID, msgarr[vChan])
+				choiceUser := vUsers[i]
+				fmt.Println(pickedChan)
+				vChan = rand.Intn(len(msgarr))
+				pickedChan = ChannelIDFromName(s, m.GuildID, msgarr[vChan])
 
-			_ = s.GuildMemberMove(m.GuildID, choiceUser, pickedChan)
-			_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("I have moved <@%s> to <#%v>", choiceUser, pickedChan))
-			time.Sleep(500 * time.Millisecond)
+				_ = s.GuildMemberMove(m.GuildID, choiceUser, pickedChan)
+				_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("I have moved <@%s> to <#%v>", choiceUser, pickedChan))
+				time.Sleep(500 * time.Millisecond)
+			}(i)
 		}
+		wg.Wait()
 	case strings.HasPrefix(m.Content, "a.lookupvoice"):
 		msgstr := m.Content
 		msgstr = strings.TrimPrefix(msgstr,"a.lookupvoice ")
@@ -507,23 +513,20 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Clean up channel currently in.
 	case m.Content == "a.cleanup":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+
 		if MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageMessages|discordgo.PermissionAdministrator) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Deleting messages in <#"+m.ChannelID+">")
-			msgCount, _ := s.ChannelMessages(m.ChannelID, 100, "", "", "")
-			time.Sleep(5 * time.Second)
-			if len(msgCount) == 100 {
-				for i := 0; i < 100; i++ {
+			time.Sleep(3 * time.Second)
+			wg.Add(100)
+			for i := 0; i < 100; i++ {
+
+				go func (i int) {
+					defer wg.Done()
 					messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
 					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
-					time.Sleep(5 * time.Millisecond)
-				}
-			} else if len(msgCount) <= 99 {
-				for i := 0; i < len(msgCount); i++ {
-					messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
-					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
-					time.Sleep(5 * time.Millisecond)
-				}
+				}(i)
 			}
+			wg.Wait()
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run a.cleanup")
 		}
