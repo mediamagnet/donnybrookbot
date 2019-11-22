@@ -130,13 +130,13 @@ func voiceChannels(s *discordgo.Session, guildID string) []string {
 
 func ChannelIDFromName(s *discordgo.Session, guildID string, channelName string) string {
 	channels, _ := s.GuildChannels(guildID)
-
-	for _, c := range channels {
-		if c.Name == channelName {
-			return c.ID
+	var c = ""
+	for _, cList := range channels {
+		if cList.Name == channelName {
+			c = cList.ID
 		}
 	}
-	return ""
+	return c
 }
 
 func main() {
@@ -227,6 +227,18 @@ func findAllVoiceState(session *discordgo.Session) []string {
 	return vString
 }
 
+func currentVoiceChannel(session *discordgo.Session, userID string) []string {
+	var vUser = make([]string, 1)
+	for _, guild := range session.State.Guilds {
+		for _, vs := range guild.VoiceStates {
+			if vs.UserID == userID {
+				vUser = append(vUser, vs.ChannelID)
+			}
+		}
+	}
+	return vUser
+}
+
 func joinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo.VoiceConnection, error) {
 	// Find a user's current voice channel
 	vs := findUserVoiceState(session, userID)
@@ -235,6 +247,11 @@ func joinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo
 	}
 	//
 	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, false)
+}
+
+func makeVoiceChan(session *discordgo.Session, guildID string, channelName string) {
+	_, _ = session.GuildChannelCreate(guildID,channelName,2)
+	return
 }
 
 func PlayAudioFile(v *discordgo.VoiceConnection, filename string) {
@@ -349,22 +366,35 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 
 		}
-		case strings.HasPrefix(m.Content, "a.scatter"):
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			var msgstr = m.Content
-			msgstr = strings.TrimPrefix(msgstr, "a.scatter")
-			rand.Seed(time.Now().Unix())
-			vUsers := findAllVoiceState(s)
-			vChan := voiceChannels(s, m.GuildID)
-			for i := 0; i <= len(vUsers)-1; i++ {
-				choiceChan := vChan[i]
-				choiceUser := vUsers[i]
-				// _ = s.GuildMemberMove(m.GuildID, choiceUser, choiceChan)
-				_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("I would have moved <@%s> to <#%s>", choiceUser, choiceChan))
-				time.Sleep(1 * time.Second)
+	case strings.HasPrefix(m.Content, "a.scatter"):
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		var msgstr = m.Content
+		var msgarr = make([]string, 1)
+		msgstr = strings.TrimPrefix(msgstr, "a.scatter ")
+		msgarr = strings.Split(msgstr, ",")
+		fmt.Println(msgarr)
+		rand.Seed(time.Now().Unix())
+		vUsers := findAllVoiceState(s)
+		// vChan := voiceChannels(s, m.GuildID)
+		for i := 0; i <= len(vUsers)-1; i++ {
+			vChan := rand.Intn(len(msgarr))
+			pickedChan := ChannelIDFromName(s, m.GuildID, msgarr[vChan])
+			choiceUser := vUsers[i]
+			fmt.Println(pickedChan)
+			if choiceUser == "" {
+				continue
 			}
+			vChan = rand.Intn(len(msgarr))
+			pickedChan = ChannelIDFromName(s, m.GuildID, msgarr[vChan])
 
-
+			_ = s.GuildMemberMove(m.GuildID, choiceUser, pickedChan)
+			_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("I have moved <@%s> to <#%v>", choiceUser, pickedChan))
+			time.Sleep(500 * time.Millisecond)
+		}
+	case strings.HasPrefix(m.Content, "a.lookupvoice"):
+		msgstr := m.Content
+		msgstr = strings.TrimPrefix(msgstr,"a.lookupvoice ")
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%v",currentVoiceChannel(s, m.Author.ID)))
 	}
 	switch {
 	// Ready up for race
