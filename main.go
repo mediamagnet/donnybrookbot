@@ -34,20 +34,26 @@ var wg sync.WaitGroup
 // Players should have comment
 type Players struct {
 	Name      string    `bson:"Name"`
+	GuildID	  string    `bson:"GuildID"`
 	PlayerID  string    `bson:"PlayerID"`
 	ChannelID string    `bson:"ChannelID"`
 	RaceID    string    `bson:"RaceID"`
+	Done	  bool      `bson:"Done"`
+	Ready	  bool		`bson:"Ready"`
 	JoinTime  time.Time `bson:"Join Time,omitempty"`
 	DoneTime  time.Time `bson:"Done Time,omitempty"`
 }
 
 // Races should have comment
 type Races struct {
-	RaceID    string    `bson:"RaceID"`
-	ChannelID string    `bson:"ChannelID"`
-	Game      string    `bson:"Game"`
-	Category  string    `bson:"Category"`
-	StartTime time.Time `bson:"Start Time"`
+	RaceID         string    `bson:"RaceID"`
+	GuildID        string    `bson:"GuildID"`
+	ChannelID      string    `bson:"ChannelID"`
+	Game           string    `bson:"Game"`
+	Category       string    `bson:"Category"`
+	StartTime      time.Time `bson:"Start Time"`
+	PlayersEntered int       `bson:"Players Entered"`
+	PlayersDone    int       `bson:"Players Done"`
 }
 
 // GetClient
@@ -132,7 +138,7 @@ func monReturnAllRaces(client *mongo.Client, filter bson.M) []*Races {
 
 func monUpdatePlayer(client *mongo.Client, updatedData bson.M, filter bson.M) int64 {
 	collection := client.Database("donnybrook").Collection("players")
-	update := bson.D{ {Key: "$set", Value: updatedData}}
+	update := bson.D{{Key: "$set", Value: updatedData}}
 	updatedResult, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		log.Fatal("Error updating player", err)
@@ -358,7 +364,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println(raceid)
 			racestring := fmt.Sprintf("%s, has started race %s for %s in category %s.", "<"+"@"+m.Author.ID+">", raceid, strings.TrimSpace(arg1), strings.TrimSpace(arg2))
 			_, _ = s.ChannelMessageSend(m.ChannelID, racestring)
-			raceInsert := Races{race, m.ChannelID, strings.TrimSpace(arg1), strings.TrimSpace(arg2), time.Now()}
+			raceInsert := Races{race, m.GuildID, m.ChannelID, strings.TrimSpace(arg1), strings.TrimSpace(arg2), time.Now(), 0,0}
 			fmt.Println(raceInsert)
 			monRace("donnybrook", "races", raceInsert)
 
@@ -389,7 +395,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+">"+" has joined the race.")
 			logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.ID)
 			fmt.Println(logstring)
-			player := Players{m.Author.Username, m.Author.ID, m.ChannelID, raceID, time.Now(), time.Now()}
+			player := Players{m.Author.Username, m.GuildID, m.Author.ID, m.ChannelID, raceID, false, false, time.Now(), time.Now()}
 			monPlayer("donnybrook", "players", player)
 		}
 	case strings.HasPrefix(m.Content, ".inrace"):
@@ -411,7 +417,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	case strings.HasPrefix(m.Content, "a.scatter"):
 		var voice *discordgo.VoiceConnection
-		if  findUserVoiceState(s, m.Author.ID) == nil {
+		if findUserVoiceState(s, m.Author.ID) == nil {
 			voice, _ = joinFirstVoiceChannel(s, m.GuildID)
 		} else {
 			voice, _ = joinUserVoiceChannel(s, m.Author.ID)
@@ -455,7 +461,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			videoURL = "https://www.youtube.com/watch?v=XCspzg9-bAg"
 			_, _ = s.ChannelMessageSend(m.ChannelID, "It's a mystery...")
 		}
-		fmt.Println("Playing "+videoURL)
+		fmt.Println("Playing " + videoURL)
 		videoInfo, err := ytdl.GetVideoInfo(videoURL)
 		if err != nil {
 			log.Fatal(err)
@@ -472,10 +478,20 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch {
 	// Ready up for race
 	case m.Content == ".ready":
+		var playerReady bool
+		c := GetClient()
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		if m.Author.ID == staticUser {
+		playerLookup := monReturnAllPlayers(c, bson.M{"PlayerID": m.Author.ID})
+		fmt.Println(playerLookup)
+		for _, v := range playerLookup {
+			if v.PlayerID == m.Author.ID {
+				playerReady = v.Ready
+			}
+		}
+		if playerReady == true {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" You've already readied up for the race if you need to leave use `.unready`.")
 		} else {
+			monUpdatePlayer(c, bson.M{"Ready": true}, bson.M{"PlayerID": m.Author.ID})
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" is ready.")
 		}
 	// unready
@@ -506,12 +522,26 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// You finish the Race
 	case m.Content == ".done":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		// c := GetClient()
+		var timeJoined time.Time
+		var playerDone bool
+		c := GetClient()
+		playerLookup := monReturnAllPlayers(c, bson.M{"PlayerID": m.Author.ID})
+		fmt.Println(playerLookup)
+		for _, v := range playerLookup {
+			if v.PlayerID == m.Author.ID {
+				timeJoined = v.JoinTime
+				playerDone = v.Done
+			}
+		}
 		var time2 = time.Now()
-		var endtime1 = time2.Sub(startTime1)
+		var endtime1 = time2.Sub(timeJoined)
 		var endtime = endtime1.Truncate(1 * time.Millisecond)
-		// monUpdatePlayer(c, bson.M{"PlayerID": })
-		_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has finished the race in: "+endtime.String())
+		if playerDone == true {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "You've already finished the race <@"+m.Author.ID+"> Please wait for the next race.")
+		} else {
+			monUpdatePlayer(c, bson.M{"Done Time": time2, "Done": true, "RaceID": "Done"}, bson.M{"PlayerID": m.Author.ID})
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has finished the race in: "+endtime.String())
+		}
 	// Quit the race
 	case m.Content == ".forfeit":
 		_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has forfeit the race, hope you join us for the next race!")
@@ -590,7 +620,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			wg.Add(100)
 			for i := 0; i < 100; i++ {
 
-				go func (i int) {
+				go func(i int) {
 					defer wg.Done()
 					messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
 					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
@@ -603,9 +633,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Bees
 	case m.Content == "b.swarm":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "\n :bee: :bee: :bee: :bee: \n " +
-			":bee: :bee: :bee: :bee: \n " +
-			":bee: :bee: :bee: :bee: \n " +
+		_, _ = s.ChannelMessageSend(m.ChannelID, "\n :bee: :bee: :bee: :bee: \n "+
+			":bee: :bee: :bee: :bee: \n "+
+			":bee: :bee: :bee: :bee: \n "+
 			":bee: :bee: :bee: :bee: \n ")
 	case m.Content == "g.honk":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
@@ -617,6 +647,3 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	}
 }
-
-
-
