@@ -16,18 +16,19 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"github.com/jonas747/dca"
+	"github.com/rylio/ytdl"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var staticuser = "265562769397514242"
+var staticUser = "265562769397514242"
 var err error
-var atime = time.Now()
+var aTime = time.Now()
 var slogan = "Donnybrook - Because sometimes fast needs to be quantified."
 var race string
-var starttime1 = time.Now()
-var endtime1 = time.Now()
+var startTime1 = time.Now()
+var endTime1 = time.Now()
 var wg sync.WaitGroup
 
 // Players should have comment
@@ -110,12 +111,33 @@ func monReturnAllPlayers(client *mongo.Client, filter bson.M) []*Players {
 	return players
 }
 
-func monReturnOnePlayer(client *mongo.Client, filter bson.M) Players {
-	var player Players
+func monReturnAllRaces(client *mongo.Client, filter bson.M) []*Races {
+
+	var races []*Races
+	collection := client.Database("donnybrook").Collection("races")
+	cur, err := collection.Find(context.TODO(), filter)
+	if err != nil {
+		log.Fatal("Could not find document ", err)
+	}
+	for cur.Next(context.TODO()) {
+		var race Races
+		err = cur.Decode(&race)
+		if err != nil {
+			log.Fatal("Decode Error ", err)
+		}
+		races = append(races, &race)
+	}
+	return races
+}
+
+func monUpdatePlayer(client *mongo.Client, updatedData bson.M, filter bson.M) int64 {
 	collection := client.Database("donnybrook").Collection("players")
-	docuReturned := collection.FindOne(context.TODO(), filter)
-	_ = docuReturned.Decode(&player)
-	return player
+	update := bson.D{ {Key: "$set", Value: updatedData}}
+	updatedResult, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Fatal("Error updating player", err)
+	}
+	return updatedResult.ModifiedCount
 }
 
 func voiceChannels(s *discordgo.Session, guildID string) []string {
@@ -251,9 +273,10 @@ func joinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo
 	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, false)
 }
 
-func makeVoiceChan(session *discordgo.Session, guildID string, channelName string) {
-	_, _ = session.GuildChannelCreate(guildID,channelName,2)
-	return
+func joinFirstVoiceChannel(session *discordgo.Session, guildID string) (*discordgo.VoiceConnection, error) {
+	listChan := findAllVoiceState(session)
+	fmt.Println(listChan)
+	return session.ChannelVoiceJoin(guildID, listChan[1], false, false)
 }
 
 func PlayAudioFile(v *discordgo.VoiceConnection, filename string) {
@@ -305,16 +328,18 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
-
+	randomString(4)
 	// Set up Race
 	switch {
 
 	case strings.HasPrefix(m.Content, ".setup"):
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		c := GetClient()
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".setup")
 		msgstr = strings.TrimSpace(msgstr)
 		msgarr := strings.Split(msgstr, ",")
+
 		if len(msgarr) <= 1 {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "You're missing either the game or the category of the race. run `.setup game name, category`")
 		} else {
@@ -322,6 +347,15 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			var arg2 = msgarr[1]
 			var raceid = randomString(4)
 			race = raceid
+			lookupRace := monReturnAllRaces(c, bson.M{"RaceID": raceid})
+			fmt.Println(raceid)
+			for _, v := range lookupRace {
+				if v.RaceID == raceid {
+					raceid = randomString(4)
+					race = raceid
+				}
+			}
+			fmt.Println(raceid)
 			racestring := fmt.Sprintf("%s, has started race %s for %s in category %s.", "<"+"@"+m.Author.ID+">", raceid, strings.TrimSpace(arg1), strings.TrimSpace(arg2))
 			_, _ = s.ChannelMessageSend(m.ChannelID, racestring)
 			raceInsert := Races{race, m.ChannelID, strings.TrimSpace(arg1), strings.TrimSpace(arg2), time.Now()}
@@ -331,14 +365,21 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	// Join Race
 	case strings.HasPrefix(m.Content, ".join"):
+		playerFound := ""
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		// c := GetClient()
+		c := GetClient()
 		var msgstr = m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".join")
 		raceID := strings.TrimSpace(msgstr)
-		// playerLookup := monReturnOnePlayer(c, bson.M{"PlayerID": m.Author.ID})
-		playerLookup := staticuser
-		if playerLookup == m.Author.ID {
+		playerLookup := monReturnAllPlayers(c, bson.M{"RaceID": raceID})
+		fmt.Println(playerLookup)
+		for _, v := range playerLookup {
+			if v.PlayerID == m.Author.ID {
+				playerFound = v.PlayerID
+			}
+		}
+
+		if playerFound == m.Author.ID {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> You've already joined the race please wait for the race to start.")
 		} else if len(raceID) <= 1 {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+">, I need your race ID also.")
@@ -346,7 +387,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry that race id does not exist")
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+">"+" has joined the race.")
-			logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.Username)
+			logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.ID)
 			fmt.Println(logstring)
 			player := Players{m.Author.Username, m.Author.ID, m.ChannelID, raceID, time.Now(), time.Now()}
 			monPlayer("donnybrook", "players", player)
@@ -354,7 +395,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case strings.HasPrefix(m.Content, ".inrace"):
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		c := GetClient()
-		var msgstr = m.Content
+		msgstr := m.Content
 		msgstr = strings.TrimPrefix(msgstr, ".inrace")
 		raceID := strings.TrimSpace(msgstr)
 		if len(raceID) <= 1 {
@@ -369,7 +410,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		}
 	case strings.HasPrefix(m.Content, "a.scatter"):
-		voice, _ := joinUserVoiceChannel(s, m.Author.ID)
+		var voice *discordgo.VoiceConnection
+		if  findUserVoiceState(s, m.Author.ID) == nil {
+			voice, _ = joinFirstVoiceChannel(s, m.GuildID)
+		} else {
+			voice, _ = joinUserVoiceChannel(s, m.Author.ID)
+		}
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var msgstr = m.Content
 		var msgarr = make([]string, 1)
@@ -392,21 +438,42 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				pickedChan = ChannelIDFromName(s, m.GuildID, msgarr[vChan])
 
 				_ = s.GuildMemberMove(m.GuildID, choiceUser, pickedChan)
-				_, _ = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("I have moved <@%s> to <#%v>", choiceUser, pickedChan))
 				time.Sleep(500 * time.Millisecond)
 			}(i)
 		}
 		wg.Wait()
-	case strings.HasPrefix(m.Content, "a.lookupvoice"):
-		msgstr := m.Content
-		msgstr = strings.TrimPrefix(msgstr,"a.lookupvoice ")
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%v",currentVoiceChannel(s, m.Author.ID)))
+	case strings.HasPrefix(m.Content, "v.play"):
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		voice, _ := joinUserVoiceChannel(s, m.Author.ID)
+		videoURL := strings.TrimPrefix(m.Content, "v.play ")
+		opts := dca.StdEncodeOptions
+		opts.RawOutput = true
+		opts.Bitrate = 120
+		opts.Application = "lowdelay"
+
+		if videoURL == "v.play" {
+			videoURL = "https://www.youtube.com/watch?v=XCspzg9-bAg"
+			_, _ = s.ChannelMessageSend(m.ChannelID, "It's a mystery...")
+		}
+		fmt.Println("Playing "+videoURL)
+		videoInfo, err := ytdl.GetVideoInfo(videoURL)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		format := videoInfo.Formats.Extremes(ytdl.FormatAudioBitrateKey, true)[0]
+		downloadURL, err := videoInfo.GetDownloadURL(format)
+		if err != nil {
+			log.Fatal(err)
+		}
+		PlayAudioFile(voice, downloadURL.String())
+
 	}
 	switch {
 	// Ready up for race
 	case m.Content == ".ready":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		if m.Author.ID == staticuser {
+		if m.Author.ID == staticUser {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" You've already readied up for the race if you need to leave use `.unready`.")
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" is ready.")
@@ -431,17 +498,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		time.Sleep(1 * time.Second)
 		_, _ = s.ChannelMessageSend(m.ChannelID, "Go!")
 
-		starttime1 = time.Now()
-		var starttime = starttime1.Truncate(1 * time.Millisecond)
+		startTime1 = time.Now()
+		var starttime = startTime1.Truncate(1 * time.Millisecond)
 		racestring := fmt.Sprintf("%s, %s, %s", m.ChannelID, race, starttime)
 		fmt.Println(racestring)
 
 	// You finish the Race
 	case m.Content == ".done":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		// c := GetClient()
 		var time2 = time.Now()
-		var endtime1 = time2.Sub(starttime1)
+		var endtime1 = time2.Sub(startTime1)
 		var endtime = endtime1.Truncate(1 * time.Millisecond)
+		// monUpdatePlayer(c, bson.M{"PlayerID": })
 		_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has finished the race in: "+endtime.String())
 	// Quit the race
 	case m.Content == ".forfeit":
@@ -510,7 +579,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case m.Content == "v.leave":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
-	// Clean up channel currently in.
+
+		// Clean up channel currently in.
 	case m.Content == "a.cleanup":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 
@@ -530,10 +600,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run a.cleanup")
 		}
-	case m.Content == "a.lookup":
-		vChannels := voiceChannels(s, m.GuildID)
-		vStates := fmt.Sprintf("%v, %v", findAllVoiceState(s), vChannels)
-		_, _ = s.ChannelMessageSend(m.ChannelID, vStates)
 	// Bees
 	case m.Content == "b.swarm":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
@@ -541,6 +607,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			":bee: :bee: :bee: :bee: \n " +
 			":bee: :bee: :bee: :bee: \n " +
 			":bee: :bee: :bee: :bee: \n ")
+	case m.Content == "g.honk":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		voice, _ := joinUserVoiceChannel(s, m.Author.ID)
+		go s.ChannelMessageSend(m.ChannelID, "Peace was never an option \n https://i.kym-cdn.com/photos/images/newsfeed/001/597/651/360.jpg")
+		go PlayAudioFile(voice, "media/honk.mp3")
+		time.Sleep(10 * time.Second)
+		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
+
 	}
 }
 

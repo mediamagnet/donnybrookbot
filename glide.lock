@@ -1,16 +1,92 @@
-hash: 79182333de4d1382cf1f1143ac3958103e7d274f30888b4c8640be36baafaeb5
-updated: 2019-11-19T23:34:56.5079512-06:00
+hash: fe44d53c9150dd101450803d8586ce33ea7b972acdd72a38304d622acbc4fc66
+updated: 2019-11-23T19:29:04.2107239-06:00
 imports:
+- name: github.com/andybalholm/cascadia
+  version: 903109d295d56a99095f2cfab0c2ca8d4b22f648
+- name: github.com/bwmarrin/dgvoice
+  version: 3c939eca8b2f42c3c8cdaf3444ec4c0223d1d1df
 - name: github.com/bwmarrin/discordgo
   version: dd99dea7adba674baa401e52362d6e330b50acf8
+- name: github.com/go-stack/stack
+  version: 2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a
+- name: github.com/golang/snappy
+  version: ff6b7dc882cf4cfba7ee0b9f7dcc1ac096c554aa
+- name: github.com/gorilla/websocket
+  version: c3e18be99d19e6b3e8f1559eea2c161a665c4b6b
 - name: github.com/joho/godotenv
   version: 23d116af351c84513e1946b527c88823e476be13
 - name: github.com/jonas747/dca
   version: 10e959e9d3e808cd961308760de0c1c36285fed7
+- name: github.com/jonas747/ogg
+  version: b4f6f4cf3757a3bf88eae9222045b99b9d76d8ca
+- name: github.com/konsorten/go-windows-terminal-sequences
+  version: f55edac94c9bbba5d6182a4be46d86a2c9b5b50e
+- name: github.com/PuerkitoBio/goquery
+  version: b17a2bbb6dc1e1566d1efc26a5369d3b8604542c
+- name: github.com/rylio/ytdl
+  version: bd30f781270fa4d6df59e2a49948cd157030a2c6
+- name: github.com/Sirupsen/logrus
+  version: 67a7fdcf741f4d5cee82cb9800994ccfd4393ad0
+- name: github.com/xdg/scram
+  version: 7eeb5667e42c09cb51bf7b7c28aea8c56767da90
+- name: github.com/xdg/stringprep
+  version: 73f8eece6fdcd902c185bf651de50f3828bed5ed
 - name: go.mongodb.org/mongo-driver
   version: 797e0a635920c291b1808180bf7249eaac5eafed
   subpackages:
   - bson
+  - bson/bsoncodec
+  - bson/bsonrw
+  - bson/bsontype
+  - bson/primitive
+  - event
+  - internal
   - mongo
   - mongo/options
+  - mongo/readconcern
+  - mongo/readpref
+  - mongo/writeconcern
+  - tag
+  - version
+  - x/bsonx
+  - x/bsonx/bsoncore
+  - x/mongo/driver
+  - x/mongo/driver/address
+  - x/mongo/driver/auth
+  - x/mongo/driver/auth/internal/gssapi
+  - x/mongo/driver/connstring
+  - x/mongo/driver/description
+  - x/mongo/driver/dns
+  - x/mongo/driver/operation
+  - x/mongo/driver/session
+  - x/mongo/driver/topology
+  - x/mongo/driver/uuid
+  - x/mongo/driver/wiremessage
+- name: golang.org/x/crypto
+  version: ac88ee75c92c889b97e05591e9a39b6480c538b3
+  subpackages:
+  - internal/subtle
+  - nacl/secretbox
+  - pbkdf2
+  - poly1305
+  - salsa20/salsa
+- name: golang.org/x/net
+  version: fc4aabc6c91483155dade6fbb627cc953a723260
+  subpackages:
+  - html
+  - html/atom
+- name: golang.org/x/sync
+  version: cd5d95a43a6e21273425c7ae415d3df9ea832eeb
+  subpackages:
+  - semaphore
+- name: golang.org/x/sys
+  version: bd437916bb0eb726b873ee8e9b2dcf212d32e2fd
+  subpackages:
+  - cpu
+  - unix
+- name: golang.org/x/text
+  version: cbf43d21aaebfdfeb81d91a5f444d13a3046e686
+  subpackages:
+  - transform
+  - unicode/norm
 testImports: []

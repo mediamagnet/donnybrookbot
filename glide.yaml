@@ -11,3 +11,6 @@ import:
   - bson
   - mongo
   - mongo/options
+- package: github.com/bwmarrin/dgvoice
+- package: github.com/rylio/ytdl
+  version: ~0.5.1
