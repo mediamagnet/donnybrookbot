@@ -16,15 +16,12 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"github.com/jonas747/dca"
-	"github.com/rylio/ytdl"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var staticUser = "265562769397514242"
 var err error
-var aTime = time.Now()
 var slogan = "Donnybrook - Because sometimes fast needs to be quantified."
 var race string
 var startTime1 = time.Now()
@@ -364,7 +361,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println(raceid)
 			racestring := fmt.Sprintf("%s, has started race %s for %s in category %s.", "<"+"@"+m.Author.ID+">", raceid, strings.TrimSpace(arg1), strings.TrimSpace(arg2))
 			_, _ = s.ChannelMessageSend(m.ChannelID, racestring)
-			raceInsert := Races{race, m.GuildID, m.ChannelID, strings.TrimSpace(arg1), strings.TrimSpace(arg2), time.Now(), 0,0}
+			raceInsert := Races{race, m.GuildID, m.ChannelID, strings.TrimSpace(arg1), strings.TrimSpace(arg2), time.Now(), 0, 0}
 			fmt.Println(raceInsert)
 			monRace("donnybrook", "races", raceInsert)
 
@@ -432,7 +429,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		vUsers := findAllVoiceState(s)
 		wg.Add(len(vUsers))
 		// vChan := voiceChannels(s, m.GuildID)
-		PlayAudioFile(voice, "media/scatter.mp3")
+		go PlayAudioFile(voice, "media/scatter2.mp3")
 		for i := 0; i <= len(vUsers)-1; i++ {
 			go func(i int) {
 				defer wg.Done()
@@ -448,33 +445,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}(i)
 		}
 		wg.Wait()
-	case strings.HasPrefix(m.Content, "v.play"):
-		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		voice, _ := joinUserVoiceChannel(s, m.Author.ID)
-		videoURL := strings.TrimPrefix(m.Content, "v.play ")
-		opts := dca.StdEncodeOptions
-		opts.RawOutput = true
-		opts.Bitrate = 120
-		opts.Application = "lowdelay"
-
-		if videoURL == "v.play" {
-			videoURL = "https://www.youtube.com/watch?v=XCspzg9-bAg"
-			_, _ = s.ChannelMessageSend(m.ChannelID, "It's a mystery...")
-		}
-		fmt.Println("Playing " + videoURL)
-		videoInfo, err := ytdl.GetVideoInfo(videoURL)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		format := videoInfo.Formats.Extremes(ytdl.FormatAudioBitrateKey, true)[0]
-		downloadURL, err := videoInfo.GetDownloadURL(format)
-		if err != nil {
-			log.Fatal(err)
-		}
-		PlayAudioFile(voice, downloadURL.String())
-
 	}
+
 	switch {
 	// Ready up for race
 	case m.Content == ".ready":
@@ -489,15 +461,29 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		}
 		if playerReady == true {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" You've already readied up for the race if you need to leave use `.unready`.")
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> You've already readied up for the race if you need to leave use `.unready`.")
 		} else {
 			monUpdatePlayer(c, bson.M{"Ready": true}, bson.M{"PlayerID": m.Author.ID})
-			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" is ready.")
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> is ready.")
 		}
 	// unready
 	case m.Content == ".unready":
+		var playerReady bool
+		c := GetClient()
+		playerLookup := monReturnAllPlayers(c, bson.M{"PlayerID": m.Author.ID})
+		fmt.Println(playerLookup)
+		for _, v := range playerLookup {
+			if v.PlayerID == m.Author.ID {
+				playerReady = v.Ready
+			}
+		}
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has left ready status, please ready up again when able.")
+		if playerReady == true {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> has left ready status, please ready up again when able.")
+			monUpdatePlayer(c, bson.M{"Ready": false}, bson.M{"PlayerID": m.Author.ID})
+		} else {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> you have not readied up at all please .ready first.")
+		}
 	// Start Race once all ready
 	case m.Content == ".start":
 
@@ -606,8 +592,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = joinUserVoiceChannel(s, m.Author.ID)
 	// Leave voice
-	case m.Content == "v.leave":
-		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+	case m.Content == "v.shutup":
+		// _ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
 
 		// Clean up channel currently in.

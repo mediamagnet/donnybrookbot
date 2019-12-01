@@ -1,5 +1,5 @@
-hash: fe44d53c9150dd101450803d8586ce33ea7b972acdd72a38304d622acbc4fc66
-updated: 2019-11-23T19:29:04.2107239-06:00
+hash: 8c75fc357ea325a00144d9bddf33f3e2f8ee338b575f134d7a279bd3496e588b
+updated: 2019-11-27T22:26:26.6104232-06:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 903109d295d56a99095f2cfab0c2ca8d4b22f648
@@ -27,6 +27,8 @@ imports:
   version: bd30f781270fa4d6df59e2a49948cd157030a2c6
 - name: github.com/Sirupsen/logrus
   version: 67a7fdcf741f4d5cee82cb9800994ccfd4393ad0
+- name: github.com/speps/go-hashids
+  version: ad304c6ede07ca1f915c30a5510c45860aa165a7
 - name: github.com/xdg/scram
   version: 7eeb5667e42c09cb51bf7b7c28aea8c56767da90
 - name: github.com/xdg/stringprep
@@ -71,7 +73,7 @@ imports:
   - poly1305
   - salsa20/salsa
 - name: golang.org/x/net
-  version: fc4aabc6c91483155dade6fbb627cc953a723260
+  version: ef20fe5d793301b553005db740f730d87993f778
   subpackages:
   - html
   - html/atom
@@ -80,7 +82,7 @@ imports:
   subpackages:
   - semaphore
 - name: golang.org/x/sys
-  version: bd437916bb0eb726b873ee8e9b2dcf212d32e2fd
+  version: 6d18c012aee9febd81bbf9806760c8c4480e870d
   subpackages:
   - cpu
   - unix

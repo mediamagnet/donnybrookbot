@@ -14,3 +14,5 @@ import:
 - package: github.com/bwmarrin/dgvoice
 - package: github.com/rylio/ytdl
   version: ~0.5.1
+- package: github.com/speps/go-hashids
+  version: ~2.0.0
