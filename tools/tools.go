@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"time"
 )
+// TODO: Settings collection
 
 // Players should have comment
 type Players struct {
@@ -38,6 +39,12 @@ type Races struct {
 	PlayersEntered int       `bson:"Players Entered"`
 	PlayersReady   int       `bson:"Players Ready"`
 	PlayersDone    int       `bson:"Players Done"`
+}
+
+type Settings struct {
+	GuildID  string  `bson:"GuildID"`
+	CanTalk  bool    `bson:"Can Talk"`
+	BotFun   bool    `bson:"Bot Fun"`
 }
 
 var err error
@@ -73,6 +80,21 @@ func MonPlayer(dbase string, collect string, players Players) {
 	fmt.Println("Inserted:", insertResult.InsertedID)
 }
 
+func MonSettings(dbase string, collect string, settings Settings) {
+	client := GetClient()
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal("Could not connect to the database", err)
+	}
+	collection := client.Database(dbase).Collection(collect)
+
+	insertResult, err := collection.InsertOne(context.TODO(), settings)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Inserted:", insertResult.InsertedID)
+}
+
 func MonRace(dbase string, collect string, races Races) {
 	// Connecting to mongoDB
 	client := GetClient()
@@ -81,7 +103,11 @@ func MonRace(dbase string, collect string, races Races) {
 		log.Fatal("Couldn't connect to the database", err)
 	}
 	collection := client.Database(dbase).Collection(collect)
-	_, _ = collection.InsertOne(context.TODO(), races)
+	insertResult, err := collection.InsertOne(context.TODO(), races)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Inserted:", insertResult.InsertedID)
 }
 
 func MonReturnAllPlayers(client *mongo.Client, filter bson.M) []*Players {
@@ -101,6 +127,24 @@ func MonReturnAllPlayers(client *mongo.Client, filter bson.M) []*Players {
 		players = append(players, &player)
 	}
 	return players
+}
+
+func MonReturnAllSettings(client *mongo.Client, filter bson.M) []*Settings {
+	var settings []*Settings
+	collection := client.Database("donnybrook").Collection("settings")
+	cur, err := collection.Find(context.TODO(), filter)
+	if err != nil {
+		log.Fatal("Could not find document", err)
+	}
+	for cur.Next(context.TODO()){
+		var setting Settings
+		err = cur.Decode(&setting)
+		if err != nil {
+			log.Fatal(err)
+		}
+		settings = append(settings, &setting)
+	}
+	return settings
 }
 
 func MonReturnAllRaces(client *mongo.Client, filter bson.M) []*Races {
@@ -124,6 +168,16 @@ func MonReturnAllRaces(client *mongo.Client, filter bson.M) []*Races {
 
 func MonUpdatePlayer(client *mongo.Client, updatedData bson.M, filter bson.M) int64 {
 	collection := client.Database("donnybrook").Collection("players")
+	update := bson.D{{Key: "$set", Value: updatedData}}
+	updatedResult, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Fatal("Error updating player", err)
+	}
+	return updatedResult.ModifiedCount
+}
+
+func MonUpdateSettings(client *mongo.Client, updatedData bson.M, filter bson.M) int64 {
+	collection := client.Database("donnybrook").Collection("settings")
 	update := bson.D{{Key: "$set", Value: updatedData}}
 	updatedResult, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
@@ -233,11 +287,11 @@ func CurrentVoiceChannel(session *discordgo.Session, userID string) []string {
 	return vUser
 }
 
-func JoinUserVoiceChannel(session *discordgo.Session, userID string) (*discordgo.VoiceConnection, error) {
+func JoinUserVoiceChannel(session *discordgo.Session, channelID string, userID string) (*discordgo.VoiceConnection, error) {
 	// Find a user's current voice channel
 	vs := FindUserVoiceState(session, userID)
 	if err != nil {
-		log.Fatal("Error")
+		session.ChannelMessageSend(channelID,"Error")
 	}
 	//
 	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, false)
