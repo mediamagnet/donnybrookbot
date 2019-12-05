@@ -59,10 +59,21 @@ func main() {
 
 func connect(s *discordgo.Session, c *discordgo.Connect) {
 	fmt.Println(c)
-	err := s.UpdateListeningStatus("cosmic background radiation")
-	if err != nil {
-		fmt.Println(err)
+	for {
+		err := s.UpdateListeningStatus("cosmic background radiation")
+		time.Sleep(30 * time.Minute)
+		err = s.UpdateStatus(0, "Donnybrook v0.0.1")
+		time.Sleep(30 * time.Minute)
+		err = s.UpdateListeningStatus(".help")
+		time.Sleep(30 * time.Minute)
+		err = s.UpdateStatus(0, "https://donnybrookbot.xyz")
+		if err != nil {
+			fmt.Println(err)
+		}
+		time.Sleep(30* time.Second)
+
 	}
+
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
