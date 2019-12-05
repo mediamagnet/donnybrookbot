@@ -67,6 +67,11 @@ func connect(s *discordgo.Session, c *discordgo.Connect) {
 		err = s.UpdateListeningStatus(".help")
 		time.Sleep(30 * time.Minute)
 		err = s.UpdateStatus(0, "https://donnybrookbot.xyz")
+		var uptime1 = time.Now()
+		var uptime = uptime1.Truncate(1 * time.Millisecond)
+		time.Sleep(30 * time.Minute)
+		uptimeline := fmt.Sprintf("Uptime: %v", uptime)
+		err = s.UpdateListeningStatus(uptimeline)
 		if err != nil {
 			fmt.Println(err)
 		}
