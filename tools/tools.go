@@ -36,6 +36,7 @@ type Races struct {
 	Game           string    `bson:"Game"`
 	Category       string    `bson:"Category"`
 	StartTime      time.Time `bson:"Start Time"`
+	Started        bool      `bson:"Started"`
 	PlayersEntered int       `bson:"Players Entered"`
 	PlayersReady   int       `bson:"Players Ready"`
 	PlayersDone    int       `bson:"Players Done"`
@@ -48,6 +49,7 @@ type Settings struct {
 }
 
 var err error
+var SettingCanTalk bool
 
 // GetClient
 func GetClient() *mongo.Client {

@@ -16,12 +16,13 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 )
+// TODO: Fix case sensitivity in raceIDs
 
 var slogan = "Donnybrook - Because sometimes fast needs to be quantified."
 var startTime1 = time.Now()
 // var endTime1 = time.Now()
 var wg sync.WaitGroup
-var SettingCanTalk = true
+var SettingCanTalk = tools.SettingCanTalk
 
 func main() {
 	// Load .env files
@@ -40,6 +41,8 @@ func main() {
 	// Let's message things
 	dg.AddHandler(messageCreate)
 
+	dg.AddHandler(connect)
+
 	err = dg.Open()
 	if err != nil {
 		log.Fatal("Error opening connection,", err)
@@ -52,7 +55,14 @@ func main() {
 	<-sc
 
 	_ = dg.Close()
+}
 
+func connect(s *discordgo.Session, c *discordgo.Connect) {
+	fmt.Println(c)
+	err := s.UpdateListeningStatus("cosmic background radiation")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -60,6 +70,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
+
+
 
 	racebot.RaceBot(s, m)
 	botadmin.BotAdmin(s, m)

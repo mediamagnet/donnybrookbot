@@ -10,101 +10,118 @@ import (
 	"time"
 )
 
-var slogan = "Donnybrook - Because sometimes fast needs to be quantified."
 var race string
 var startTime1 = time.Now()
 // var endTime1 = time.Now()
 var wg sync.WaitGroup
-var SettingCanTalk = true
+var SettingCanTalk = tools.SettingCanTalk
 
 func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch {
-		case strings.HasPrefix(m.Content, ".setup"):
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			c := tools.GetClient()
-			var msgstr = m.Content
-			msgstr = strings.TrimPrefix(msgstr, ".setup")
-			msgstr = strings.TrimSpace(msgstr)
-			msgarr := strings.Split(msgstr, ",")
+	case strings.HasPrefix(m.Content, ".setup"):
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		c := tools.GetClient()
+		var msgstr = m.Content
+		msgstr = strings.TrimPrefix(msgstr, ".setup")
+		msgstr = strings.TrimSpace(msgstr)
+		msgarr := strings.Split(msgstr, ",")
 
-			if len(msgarr) <= 1 {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "You're missing either the game or the category of the race. run `.setup game name, category`")
-			} else {
-				var arg1 = msgarr[0]
-				var arg2 = msgarr[1]
-				var raceid = tools.RandomString(4)
-				race = raceid
-				lookupRace := tools.MonReturnAllRaces(c, bson.M{"RaceID": raceid})
-				fmt.Println(raceid)
-				for _, v := range lookupRace {
-					if v.RaceID == raceid {
-						raceid = tools.RandomString(4)
-						race = raceid
-					}
+		if len(msgarr) <= 1 {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "You're missing either the game or the category of the race. run `.setup game name, category`")
+		} else {
+			var arg1 = msgarr[0]
+			var arg2 = msgarr[1]
+			var raceid = tools.RandomString(4)
+			race = raceid
+			lookupRace := tools.MonReturnAllRaces(c, bson.M{"RaceID": raceid})
+			fmt.Println(raceid)
+			for _, v := range lookupRace {
+				if v.RaceID == raceid {
+					raceid = tools.RandomString(4)
+					race = raceid
 				}
-				fmt.Println(raceid)
-				racestring := fmt.Sprintf("%s, has started race %s for %s in category %s.", "<"+"@"+m.Author.ID+">", raceid, strings.TrimSpace(arg1), strings.TrimSpace(arg2))
-				_, _ = s.ChannelMessageSend(m.ChannelID, racestring)
-				raceInsert := tools.Races{RaceID: race,
-					GuildID: m.GuildID,
-					ChannelID: m.ChannelID,
-					Game: strings.TrimSpace(arg1),
-					Category: strings.TrimSpace(arg2),
-					StartTime: time.Now()}
-				fmt.Println(raceInsert)
-				tools.MonRace("donnybrook", "races", raceInsert)
-
 			}
+			fmt.Println(raceid)
+			racestring := fmt.Sprintf("%s, has started race %s for %s in category %s.", "<"+"@"+m.Author.ID+">", raceid, strings.TrimSpace(arg1), strings.TrimSpace(arg2))
+			_, _ = s.ChannelMessageSend(m.ChannelID, racestring)
+			raceInsert := tools.Races{RaceID: race,
+				GuildID: m.GuildID,
+				ChannelID: m.ChannelID,
+				Game: strings.TrimSpace(arg1),
+				Category: strings.TrimSpace(arg2),
+				StartTime: time.Now()}
+			fmt.Println(raceInsert)
+			tools.MonRace("donnybrook", "races", raceInsert)
+
+			_, err := s.GuildChannelCreateComplex(m.GuildID, discordgo.GuildChannelCreateData{
+				Name:                 raceid,
+				Type:                 discordgo.ChannelTypeGuildText,
+				Topic:                arg1+" - "+arg2,
+			})
+			_, err = s.GuildChannelCreateComplex(m.GuildID, discordgo.GuildChannelCreateData{
+				Name:                 raceid+"-voice",
+				Type:                 discordgo.ChannelTypeGuildVoice,
+				Bitrate:              64000,
+			})
+			if err != nil {
+				fmt.Println("Error creating channel", err)
+			}
+			getID := tools.ChannelIDFromName(s, m.GuildID, raceid+"-voice")
+			_, _ = s.ChannelVoiceJoin(m.GuildID, getID, false, false)
+
+		}
 		// Join Race
-		case strings.HasPrefix(m.Content, ".join"):
-			playerFound := ""
-			raceFound := ""
-			playersJoined := 0
-			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			c := tools.GetClient()
-			var msgstr = m.Content
-			msgstr = strings.TrimPrefix(msgstr, ".join")
-			raceID := strings.TrimSpace(msgstr)
-			playerLookup := tools.MonReturnAllPlayers(c, bson.M{"RaceID": raceID})
-			raceLookup := tools.MonReturnAllRaces(c, bson.M{"RaceID": raceID})
-			fmt.Println(playerLookup)
-			for _, v := range playerLookup {
-				if v.PlayerID == m.Author.ID {
-					playerFound = v.PlayerID
-				}
+	case strings.HasPrefix(m.Content, ".join"):
+		playerFound := ""
+		raceFound := ""
+		playersJoined := 0
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		c := tools.GetClient()
+		var msgstr = m.Content
+		msgstr = strings.TrimPrefix(msgstr, ".join")
+		raceID := strings.TrimSpace(msgstr)
+		playerLookup := tools.MonReturnAllPlayers(c, bson.M{"RaceID": raceID})
+		raceLookup := tools.MonReturnAllRaces(c, bson.M{"RaceID": raceID})
+		fmt.Println(playerLookup)
+		for _, v := range playerLookup {
+			if v.PlayerID == m.Author.ID {
+				playerFound = v.PlayerID
 			}
+		}
 
-			for _, v := range raceLookup {
-				if v.RaceID == raceID {
-					raceFound = v.RaceID
-					playersJoined = v.PlayersEntered
-				}
+		for _, v := range raceLookup {
+			if v.RaceID == raceID {
+				raceFound = v.RaceID
+				playersJoined = v.PlayersEntered
 			}
+		}
 
-			if playerFound == m.Author.ID {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> You've already joined the race please wait for the race to start.")
-			} else if len(raceID) <= 1 {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+">, I need your race ID also.")
-			} else if raceID != race {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry that race id does not exist")
-			} else {
-				_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+">"+" has joined the race.")
-				playersJoined = playersJoined + 1
-				logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.ID)
-				fmt.Println(logstring)
-				player := tools.Players{Name: m.Author.Username,
-					GuildID: m.GuildID,
-					PlayerID: m.Author.ID,
-					ChannelID: m.ChannelID,
-					RaceID: raceID,
-					Ready: false,
-					Done: false,
-					JoinTime: time.Now(),
-					DoneTime: time.Now()}
+		if playerFound == m.Author.ID {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> You've already joined the race please wait for the race to start.")
+		} else if len(raceID) <= 1 {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+">, I need your race ID also.")
+		} else if raceID != race {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry that race id does not exist")
+		} else {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+">"+" has joined the race.")
+			playersJoined = playersJoined + 1
+			logstring := fmt.Sprintf("Channel ID: %s, Race ID: %s, Name: %s", m.ChannelID, race, m.Author.ID)
+			fmt.Println(logstring)
+			player := tools.Players{Name: m.Author.Username,
+				GuildID: m.GuildID,
+				PlayerID: m.Author.ID,
+				ChannelID: m.ChannelID,
+				RaceID: raceID,
+				Ready: false,
+				Done: false,
+				JoinTime: time.Now(),
+				DoneTime: time.Now()}
 
-				tools.MonPlayer("donnybrook", "players", player)
-				tools.MonUpdateRace(tools.GetClient(), bson.M{"Players Entered": playersJoined}, bson.M{"RaceID": raceFound})
-			}
+			tools.MonPlayer("donnybrook", "players", player)
+			tools.MonUpdateRace(tools.GetClient(), bson.M{"Players Entered": playersJoined}, bson.M{"RaceID": raceFound})
+			getID := tools.ChannelIDFromName(s, m.GuildID, raceFound+"-voice")
+			_ = s.GuildMemberMove(m.GuildID, m.Author.ID, getID)
+		}
 	case m.Content == ".ready":
 		var playerReady bool
 		playerRace := ""
@@ -176,12 +193,15 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var starttime = startTime1.Truncate(1 * time.Millisecond)
 		racestring := fmt.Sprintf("%s, %s, %s", m.ChannelID, race, starttime)
 		fmt.Println(racestring)
+		// tools.MonUpdateRace(tools.GetClient(), bson.M{"Started":true, "Start Time":starttime}, bson.M{"RaceID":})
 
 	// You finish the Race
 	case m.Content == ".done":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var timeJoined time.Time
+		var started bool
 		var playerDone bool
+		var raceid string
 		c := tools.GetClient()
 		playerLookup := tools.MonReturnAllPlayers(c, bson.M{"PlayerID": m.Author.ID})
 		fmt.Println(playerLookup)
@@ -189,14 +209,25 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if v.PlayerID == m.Author.ID {
 				timeJoined = v.JoinTime
 				playerDone = v.Done
+				raceid = v.RaceID
+			}
+		}
+		lookupStart := tools.MonReturnAllRaces(tools.GetClient(), bson.M{"RaceID": raceid})
+		for _, v := range lookupStart {
+			if v.RaceID == raceid {
+				started = v.Started
 			}
 		}
 		var time2 = time.Now()
 		var endtime1 = time2.Sub(timeJoined)
 		var endtime = endtime1.Truncate(1 * time.Millisecond)
+
 		if playerDone == true {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "You've already finished the race <@"+m.Author.ID+"> " +
 				"Please wait for the next race.")
+		} else if started == false {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+">, Please wait for the race to start before finishing the race.")
+
 		} else {
 			tools.MonUpdatePlayer(c, bson.M{"Done Time": time2, "Done": true, "RaceID": "Done"}, bson.M{"PlayerID": m.Author.ID})
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has finished the race in: "+endtime.String())
