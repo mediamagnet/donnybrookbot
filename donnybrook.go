@@ -172,7 +172,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case m.Content == "a.uptime":
 		var uptime1 = time.Now()
 		var uptime = uptime1.Truncate(1 * time.Millisecond)
-		time.Sleep(30 * time.Minute)
 		upTimeLine := fmt.Sprintf("I've been running for: %v", uptime)
 		err, upTimed := s.ChannelMessageSend(m.ChannelID, upTimeLine)
 		if err != nil {
