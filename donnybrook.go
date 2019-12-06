@@ -19,7 +19,7 @@ import (
 // TODO: Fix case sensitivity in raceIDs
 
 var slogan = "Donnybrook - Because sometimes fast needs to be quantified."
-var startTime1 = time.Now()
+var launchTime = time.Now()
 // var endTime1 = time.Now()
 var wg sync.WaitGroup
 var SettingCanTalk = tools.SettingCanTalk
@@ -171,7 +171,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// Clean up channel currently in.
 	case m.Content == "a.uptime":
 		var uptime1 = time.Now()
-		var uptime = uptime1.Truncate(1 * time.Millisecond)
+		var uptime = uptime1.Sub(launchTime)
+		uptime = uptime.Truncate(1 * time.Millisecond)
 		upTimeLine := fmt.Sprintf("I've been running for: %v", uptime)
 		err, upTimed := s.ChannelMessageSend(m.ChannelID, upTimeLine)
 		if err != nil {
