@@ -67,11 +67,6 @@ func connect(s *discordgo.Session, c *discordgo.Connect) {
 		err = s.UpdateListeningStatus(".help")
 		time.Sleep(30 * time.Minute)
 		err = s.UpdateStatus(0, "https://donnybrookbot.xyz")
-		var uptime1 = time.Now()
-		var uptime = uptime1.Truncate(1 * time.Millisecond)
-		time.Sleep(30 * time.Minute)
-		uptimeline := fmt.Sprintf("Uptime: %v", uptime)
-		err = s.UpdateListeningStatus(uptimeline)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -174,7 +169,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
 
 		// Clean up channel currently in.
-
+	case m.Content == "a.uptime":
+		var uptime1 = time.Now()
+		var uptime = uptime1.Truncate(1 * time.Millisecond)
+		time.Sleep(30 * time.Minute)
+		upTimeLine := fmt.Sprintf("I've been running for: %v", uptime)
+		err, upTimed := s.ChannelMessageSend(m.ChannelID, upTimeLine)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(upTimed)
 	// Bees
 
 	case m.Content == "b.swarm":
