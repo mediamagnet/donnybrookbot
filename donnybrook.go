@@ -21,7 +21,6 @@ var slogan = "Donnybrook - Because sometimes fast needs to be quantified."
 var launchTime = time.Now()
 // var endTime1 = time.Now()
 var wg sync.WaitGroup
-var SettingCanTalk = tools.SettingCanTalk
 
 func main() {
 	// Load .env files
