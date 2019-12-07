@@ -17,7 +17,10 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case strings.HasPrefix(m.Content, "a.scatter"):
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var voice *discordgo.VoiceConnection
-		voice, _ = tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID)
+		voice, err := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID)
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, "Error: you must be in a voice channel first.")
+		}
 		var msgstr = m.Content
 		var msgarr = make([]string, 1)
 		msgstr = strings.TrimPrefix(msgstr, "a.scatter ")

@@ -2,9 +2,8 @@ package main
 
 import (
 	"donnybrook/botadmin"
-	"donnybrook/botsettings"
-	"donnybrook/tools"
 	"donnybrook/racebot"
+	"donnybrook/tools"
 	"fmt"
 	"log"
 	"os"
@@ -72,6 +71,7 @@ func connect(s *discordgo.Session, c *discordgo.Connect) {
 		}
 		time.Sleep(30* time.Second)
 
+
 	}
 
 }
@@ -82,11 +82,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-
-
 	racebot.RaceBot(s, m)
 	botadmin.BotAdmin(s, m)
-	botsettings.BotSettings(s, m)
 	fmt.Printf("%20s %20s %20s > %s\n", m.ChannelID, time.Now().Format(time.Stamp), m.Author.Username, m.Content)
 	tools.RandomString(4)
 
@@ -117,6 +114,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				{Name: ".done", Value: "Once you finish the race use this."},
 				{Name: ".forfeit", Value: "Not able to keep going use this to exit the race."},
 				{Name: ".help", Value: "You're reading it."},
+				{Name: ".invite", Value: "Got a question? join the Donnybrook discord here: https://discord.gg/cyZzPZY"},
 				{Name: "v.join", Value: "Join a voice channel for voiced countdown. Must be in voice channel for this to work."},
 				{Name: "v.leave", Value: "Leave the voice channel"},
 				{Name: "a.cleanup", Value: "Cleans messages in channel command is run in. User must have `Mannage Message` permissions."},
@@ -170,6 +168,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		// Clean up channel currently in.
 	case m.Content == "a.uptime":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var uptime1 = time.Now()
 		var uptime = uptime1.Sub(launchTime)
 		uptime = uptime.Truncate(1 * time.Millisecond)

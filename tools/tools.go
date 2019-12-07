@@ -42,14 +42,7 @@ type Races struct {
 	PlayersDone    int       `bson:"Players Done"`
 }
 
-type Settings struct {
-	GuildID  string  `bson:"GuildID"`
-	CanTalk  bool    `bson:"Can Talk"`
-	BotFun   bool    `bson:"Bot Fun"`
-}
-
 var err error
-var SettingCanTalk bool
 
 // GetClient
 func GetClient() *mongo.Client {
@@ -76,21 +69,6 @@ func MonPlayer(dbase string, collect string, players Players) {
 	collection := client.Database(dbase).Collection(collect)
 
 	insertResult, err := collection.InsertOne(context.TODO(), players)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Inserted:", insertResult.InsertedID)
-}
-
-func MonSettings(dbase string, collect string, settings Settings) {
-	client := GetClient()
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal("Could not connect to the database", err)
-	}
-	collection := client.Database(dbase).Collection(collect)
-
-	insertResult, err := collection.InsertOne(context.TODO(), settings)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -131,24 +109,6 @@ func MonReturnAllPlayers(client *mongo.Client, filter bson.M) []*Players {
 	return players
 }
 
-func MonReturnAllSettings(client *mongo.Client, filter bson.M) []*Settings {
-	var settings []*Settings
-	collection := client.Database("donnybrook").Collection("settings")
-	cur, err := collection.Find(context.TODO(), filter)
-	if err != nil {
-		log.Fatal("Could not find document", err)
-	}
-	for cur.Next(context.TODO()){
-		var setting Settings
-		err = cur.Decode(&setting)
-		if err != nil {
-			log.Fatal(err)
-		}
-		settings = append(settings, &setting)
-	}
-	return settings
-}
-
 func MonReturnAllRaces(client *mongo.Client, filter bson.M) []*Races {
 
 	var races []*Races
@@ -170,16 +130,6 @@ func MonReturnAllRaces(client *mongo.Client, filter bson.M) []*Races {
 
 func MonUpdatePlayer(client *mongo.Client, updatedData bson.M, filter bson.M) int64 {
 	collection := client.Database("donnybrook").Collection("players")
-	update := bson.D{{Key: "$set", Value: updatedData}}
-	updatedResult, err := collection.UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		log.Fatal("Error updating player", err)
-	}
-	return updatedResult.ModifiedCount
-}
-
-func MonUpdateSettings(client *mongo.Client, updatedData bson.M, filter bson.M) int64 {
-	collection := client.Database("donnybrook").Collection("settings")
 	update := bson.D{{Key: "$set", Value: updatedData}}
 	updatedResult, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
