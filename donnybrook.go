@@ -151,14 +151,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case m.Content == "v.join":
 
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		if SettingCanTalk == true {
-			_, err := tools.JoinUserVoiceChannel(s,m.ChannelID, m.Author.ID)
-			if err != nil {
-				fmt.Println(err)
-				s.ChannelMessageSend(m.ChannelID, "Error: Try joining a voice channel first.")
-			}
-		} else {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry can't talk right now.")
+		_, err := tools.JoinUserVoiceChannel(s,m.ChannelID, m.Author.ID)
+		if err != nil {
+			fmt.Println(err)
+			s.ChannelMessageSend(m.ChannelID, "Error: Try joining a voice channel first.")
 		}
 	// Leave voice
 	case m.Content == "v.leave":
