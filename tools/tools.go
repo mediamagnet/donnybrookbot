@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
@@ -206,15 +207,15 @@ func MemberHasPermission(s *discordgo.Session, guildID string, userID string, pe
 	return false
 }
 
-func FindUserVoiceState(session *discordgo.Session, userID string) *discordgo.VoiceState {
+func FindUserVoiceState(session *discordgo.Session, userID string) (*discordgo.VoiceState, error) {
 	for _, guild := range session.State.Guilds {
 		for _, vs := range guild.VoiceStates {
 			if vs.UserID == userID {
-				return vs
+				return vs, nil
 			}
 		}
 	}
-	return nil
+	return nil, errors.New("Could not find user's voice state")
 }
 
 func FindAllVoiceState(session *discordgo.Session) []string {
@@ -241,7 +242,7 @@ func CurrentVoiceChannel(session *discordgo.Session, userID string) []string {
 
 func JoinUserVoiceChannel(session *discordgo.Session, channelID string, userID string) (*discordgo.VoiceConnection, error) {
 	// Find a user's current voice channel
-	vs := FindUserVoiceState(session, userID)
+	vs, err := FindUserVoiceState(session, userID)
 	if err != nil {
 		session.ChannelMessageSend(channelID,"Error")
 	}
