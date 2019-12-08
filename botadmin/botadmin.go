@@ -32,6 +32,7 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 			wg.Add(len(vUsers))
 			// vChan := voiceChannels(s, m.GuildID)
 			go tools.PlayAudioFile(voice, "media/scatter2.mp3")
+			time.Sleep(5 * time.Second)
 			for i := 0; i <= len(vUsers)-1; i++ {
 				go func(i int) {
 					defer wg.Done()
