@@ -174,9 +174,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		fmt.Println(upTimed)
 	// Bees
-	case m.Content == "a.test":
+	case m.Content == ".invite":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-
+		_, _ = s.ChannelMessageSend(m.ChannelID, "Got a question? join the Donnybrook discord here: https://discord.gg/cyZzPZY")
 	case m.Content == "b.swarm":
 		lastMsg :=  make([]string, 1)
 		fmt.Println(lastMsg)
