@@ -31,8 +31,7 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if tools.MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageServer|discordgo.PermissionAll) {
 			wg.Add(len(vUsers))
 			// vChan := voiceChannels(s, m.GuildID)
-			go tools.PlayAudioFile(voice, "media/scatter2.mp3")
-			time.Sleep(5 * time.Second)
+			tools.PlayAudioFile(voice, "media/scatter2.mp3")
 			for i := 0; i <= len(vUsers)-1; i++ {
 				go func(i int) {
 					defer wg.Done()
