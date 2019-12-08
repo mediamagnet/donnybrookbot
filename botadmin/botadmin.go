@@ -17,7 +17,7 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case strings.HasPrefix(m.Content, "a.scatter"):
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var voice *discordgo.VoiceConnection
-		voice, err := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID)
+		voice, err := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, "Error: you must be in a voice channel first.")
 		}

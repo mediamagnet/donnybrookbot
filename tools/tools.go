@@ -149,6 +149,24 @@ func MonUpdateRace(client *mongo.Client, updatedData bson.M, filter bson.M) int6
 	return updatedResult.ModifiedCount
 }
 
+func MonDeletePlayer(client *mongo.Client, filter bson.M) int64 {
+	collection := client.Database("donnybrook").Collection("players")
+	deleteResult, err := collection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		log.Fatal("Error deleting player", err)
+	}
+	return deleteResult.DeletedCount
+}
+
+func MonDeleteRace(client *mongo.Client, filter bson.M) int64 {
+	collection := client.Database("donnybrook").Collection("race")
+	deleteResult, err := collection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		log.Fatal("Error deleting player", err)
+	}
+	return deleteResult.DeletedCount
+}
+
 func VoiceChannels(s *discordgo.Session, guildID string) []string {
 	channels, _ := s.GuildChannels(guildID)
 	chanSlice := make([]string, 1)
@@ -207,15 +225,18 @@ func MemberHasPermission(s *discordgo.Session, guildID string, userID string, pe
 	return false
 }
 
-func FindUserVoiceState(session *discordgo.Session, userID string) (*discordgo.VoiceState, error) {
-	for _, guild := range session.State.Guilds {
+func FindUserVoiceState(session *discordgo.Session, userID string, guildID string) (*discordgo.VoiceState, error) {
+	guild, err := session.State.Guild(guildID)
 		for _, vs := range guild.VoiceStates {
 			if vs.UserID == userID {
 				return vs, nil
 			}
 		}
-	}
-	return nil, errors.New("Could not find user's voice state")
+		if err != nil {
+			fmt.Println("Could not find guild specified")
+		}
+
+	return nil, errors.New("could not find user's voice state")
 }
 
 func FindAllVoiceState(session *discordgo.Session) []string {
@@ -240,14 +261,19 @@ func CurrentVoiceChannel(session *discordgo.Session, userID string) []string {
 	return vUser
 }
 
-func JoinUserVoiceChannel(session *discordgo.Session, channelID string, userID string) (*discordgo.VoiceConnection, error) {
+func JoinUserVoiceChannel(session *discordgo.Session, channelID string, userID string, guildID string) (*discordgo.VoiceConnection, error) {
 	// Find a user's current voice channel
-	vs, err := FindUserVoiceState(session, userID)
+	vs, err := FindUserVoiceState(session, userID, guildID)
 	if err != nil {
-		session.ChannelMessageSend(channelID,"Error")
+		fmt.Println(err)
 	}
 	//
-	return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, false)
+	if vs == nil {
+		session.ChannelMessageSend(channelID, "You're not in a Voice Channel.")
+	} else {
+		return session.ChannelVoiceJoin(vs.GuildID, vs.ChannelID, false, false)
+	}
+	return nil, err
 }
 
 func PlayAudioFile(v *discordgo.VoiceConnection, filename string) {

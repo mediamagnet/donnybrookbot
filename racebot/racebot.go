@@ -174,7 +174,7 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case m.Content == ".start":
 
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID)
+		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
 		_, _ = s.ChannelMessageSend(m.ChannelID, "All racers have readied")
 		time.Sleep(1 * time.Second)
 		go s.ChannelMessageSend(m.ChannelID, "Starting in \n3.")

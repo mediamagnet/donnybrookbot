@@ -151,14 +151,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case m.Content == "v.join":
 
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		_, err := tools.JoinUserVoiceChannel(s,m.ChannelID, m.Author.ID)
+		voiceState, err := tools.JoinUserVoiceChannel(s,m.ChannelID, m.Author.ID, m.GuildID)
 		if err != nil {
 			fmt.Println(err)
-			s.ChannelMessageSend(m.ChannelID, "Error: Try joining a voice channel first.")
 		}
+		fmt.Println(voiceState)
 	// Leave voice
 	case m.Content == "v.leave":
-		// _ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
 
 		// Clean up channel currently in.
@@ -174,6 +174,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		fmt.Println(upTimed)
 	// Bees
+	case m.Content == "a.test":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 
 	case m.Content == "b.swarm":
 		lastMsg :=  make([]string, 1)
@@ -185,7 +187,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			":bee: :bee: :bee: :bee: \n ")
 	case m.Content == "g.honk":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID)
+		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
 		go s.ChannelMessageSend(m.ChannelID, "Peace was never an option \n " +
 			"https://i.kym-cdn.com/photos/images/newsfeed/001/597/651/360.jpg")
 		go tools.PlayAudioFile(voice, "media/honk.mp3")
@@ -194,7 +196,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	case m.Content == ".lick":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID)
+		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
 		go s.ChannelMessageSend(m.ChannelID, "https://i.ytimg.com/vi/lSXxEdaOqgU/maxresdefault.jpg")
 		go tools.PlayAudioFile(voice, "media/lick.mp3")
 		time.Sleep(50 * time.Second)
