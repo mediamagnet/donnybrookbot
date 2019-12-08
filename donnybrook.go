@@ -83,7 +83,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	racebot.RaceBot(s, m)
 	botadmin.BotAdmin(s, m)
-	fmt.Printf("%20s %20s %20s > %s\n", m.ChannelID, time.Now().Format(time.Stamp), m.Author.Username, m.Content)
 	tools.RandomString(4)
 
 	switch {
@@ -187,7 +186,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			":bee: :bee: :bee: :bee: \n ")
 	case m.Content == "g.honk":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
+		voice, err := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, "Error: you must be in a voice channel first.")
+		}
 		go s.ChannelMessageSend(m.ChannelID, "Peace was never an option \n " +
 			"https://i.kym-cdn.com/photos/images/newsfeed/001/597/651/360.jpg")
 		go tools.PlayAudioFile(voice, "media/honk.mp3")
