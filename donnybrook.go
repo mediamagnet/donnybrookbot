@@ -57,18 +57,25 @@ func main() {
 
 func connect(s *discordgo.Session, c *discordgo.Connect) {
 	fmt.Println(c)
+	var guildName = make([]string, 1)
+	for _, v := range s.State.Guilds {
+		guildName = append(guildName, v.Name)
+	}
 	for {
-		err := s.UpdateListeningStatus("cosmic background radiation")
-		time.Sleep(30 * time.Minute)
+		guildCount := len(guildName)-1
+		err := s.UpdateListeningStatus(fmt.Sprintf("races in %v servers", guildCount))
+		time.Sleep(15 * time.Minute)
+		err = s.UpdateListeningStatus("cosmic background radiation")
+		time.Sleep(15 * time.Minute)
 		err = s.UpdateStatus(0, "Donnybrook v0.0.1")
-		time.Sleep(30 * time.Minute)
+		time.Sleep(15 * time.Minute)
 		err = s.UpdateListeningStatus(".help")
-		time.Sleep(30 * time.Minute)
+		time.Sleep(15 * time.Minute)
 		err = s.UpdateStatus(0, "https://donnybrookbot.xyz")
 		if err != nil {
 			fmt.Println(err)
 		}
-		time.Sleep(30* time.Second)
+		time.Sleep(15 * time.Second)
 
 
 	}
@@ -102,7 +109,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				Height: 128,
 			},
 			Color:       0x550000,
-			Description: "Welcome to the Donnybrook Race bot Here's some useful commands: \n",
+			Description: "Welcome to the Donnybrook Race bot, Here's some useful commands: \n",
 			Fields: []*discordgo.MessageEmbedField{
 				{Name: ".setup Game, Category", Value: "Setup a race"},
 				{Name: ".join <race id>", Value: "Join a race with the specified id"},
@@ -115,7 +122,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				{Name: ".invite", Value: "Got a question? join the Donnybrook discord here: https://discord.gg/cyZzPZY"},
 				{Name: "v.join", Value: "Join a voice channel for voiced countdown. Must be in voice channel for this to work."},
 				{Name: "v.leave", Value: "Leave the voice channel"},
-				{Name: "a.cleanup", Value: "Cleans messages in channel command is run in. User must have `Mannage Message` permissions."},
+				{Name: "a.cleanup", Value: "Cleans messages in channel command is run in. User must have `Manage Message` permissions."},
 				{Name: "a.scatter <Channels to scatter to>", Value:"Scatter users to the provided channels. User must have `Manage Server` Permissions."},
 				{Name: ".lick", Value: "..."}},
 			Footer: &discordgo.MessageEmbedFooter{
@@ -159,6 +166,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case m.Content == "v.leave":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
+	case m.Content == "a.test":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 
 		// Clean up channel currently in.
 	case m.Content == "a.uptime":
