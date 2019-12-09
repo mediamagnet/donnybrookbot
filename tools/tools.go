@@ -14,7 +14,7 @@ import (
 	"math/rand"
 	"time"
 )
-// TODO: Settings collection
+
 
 // Players should have comment
 type Players struct {
