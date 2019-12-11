@@ -14,7 +14,7 @@ var wg sync.WaitGroup
 
 func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch {
-	case strings.HasPrefix(m.Content, "a.scatter"):
+	case strings.HasPrefix(m.Content, ".scatter"):
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var voice *discordgo.VoiceConnection
 		voice, err := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
@@ -50,7 +50,7 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "No <@"+m.Author.ID+"> you cannot scatter people.")
 		}
-	case m.Content == "a.cleanup":
+	case m.Content == ".cleanup":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 
 		if tools.MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageMessages|discordgo.PermissionAdministrator) {

@@ -120,10 +120,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				{Name: ".forfeit", Value: "Not able to keep going use this to exit the race."},
 				{Name: ".help", Value: "You're reading it."},
 				{Name: ".invite", Value: "Got a question? join the Donnybrook discord here: https://discord.gg/cyZzPZY"},
-				{Name: "v.join", Value: "Join a voice channel for voiced countdown. Must be in voice channel for this to work."},
-				{Name: "v.leave", Value: "Leave the voice channel"},
-				{Name: "a.cleanup", Value: "Cleans messages in channel command is run in. User must have `Manage Message` permissions."},
-				{Name: "a.scatter <Channels to scatter to>", Value:"Scatter users to the provided channels. User must have `Manage Server` Permissions."},
+				{Name: ".join", Value: "Join a voice channel for voiced countdown. Must be in voice channel for this to work."},
+				{Name: ".leave", Value: "Leave the voice channel"},
+				{Name: ".cleanup", Value: "Cleans messages in channel command is run in. User must have `Manage Message` permissions."},
+				{Name: ".scatter <Channels to scatter to>", Value:"Scatter users to the provided channels. User must have `Manage Server` Permissions."},
 				{Name: ".lick", Value: "..."}},
 			Footer: &discordgo.MessageEmbedFooter{
 				Text:    slogan,
@@ -154,7 +154,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				Text:    slogan,
 				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
 	// Join voice
-	case m.Content == "v.join":
+	case m.Content == ".join":
 
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		voiceState, err := tools.JoinUserVoiceChannel(s,m.ChannelID, m.Author.ID, m.GuildID)
@@ -163,14 +163,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		fmt.Println(voiceState)
 	// Leave voice
-	case m.Content == "v.leave":
+	case m.Content == ".leave":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
-	case m.Content == "a.test":
-		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 
-		// Clean up channel currently in.
-	case m.Content == "a.uptime":
+	case m.Content == ".uptime":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		var uptime1 = time.Now()
 		var uptime = uptime1.Sub(launchTime)
@@ -193,7 +190,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			":bee: :bee: :bee: :bee: \n "+
 			":bee: :bee: :bee: :bee: \n "+
 			":bee: :bee: :bee: :bee: \n ")
-	case m.Content == "g.honk":
+	case m.Content == ".honk":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		voice, err := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
 		if err != nil {
