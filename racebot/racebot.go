@@ -181,28 +181,41 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case m.Content == ".start":
 
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "All racers have readied")
-		time.Sleep(1 * time.Second)
-		go s.ChannelMessageSend(m.ChannelID, "Starting in \n3.")
-		go tools.PlayAudioFile(voice, "media/racestart.mp3")
-		time.Sleep(1 * time.Second)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "2.")
-		time.Sleep(1 * time.Second)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "1.")
-		time.Sleep(1 * time.Second)
-		_, _ = s.ChannelMessageSend(m.ChannelID, "Go!")
-
 		startTime1 = time.Now()
 		var starttime = startTime1.Truncate(1 * time.Millisecond)
 		var getRace string
-		raceLookup := tools.MonReturnAllPlayers(tools.GetClient(), bson.M{"PlayerID": m.Author.ID})
-		for _, v := range raceLookup {
+		var readyCount int
+		var joinCount int
+		allPlayers := tools.MonReturnAllPlayers(tools.GetClient(), bson.M{"PlayerID": m.Author.ID})
+		for _, v := range allPlayers {
 			if v.PlayerID == m.Author.ID {
 				if v.RaceID != "done" {
 					getRace = v.RaceID
 				}
 			}
+		}
+		allRaces := tools.MonReturnAllRaces(tools.GetClient(), bson.M{"RaceID": getRace})
+		for _, v := range allRaces {
+			if v.RaceID == getRace {
+				readyCount = v.PlayersReady
+				joinCount = v.PlayersEntered
+			}
+		}
+		if readyCount == joinCount {
+			voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
+			_, _ = s.ChannelMessageSend(m.ChannelID, "All racers have readied")
+			time.Sleep(1 * time.Second)
+			go s.ChannelMessageSend(m.ChannelID, "Starting in \n3.")
+			go tools.PlayAudioFile(voice, "media/racestart.mp3")
+			time.Sleep(1 * time.Second)
+			_, _ = s.ChannelMessageSend(m.ChannelID, "2.")
+			time.Sleep(1 * time.Second)
+			_, _ = s.ChannelMessageSend(m.ChannelID, "1.")
+			time.Sleep(1 * time.Second)
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Go!")
+
+		} else {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Not all players are ready make sure everyone does .ready before starting the race.")
 		}
 
 		tools.MonUpdateRace(tools.GetClient(), bson.M{"Started":true, "Start Time":starttime}, bson.M{"RaceID":getRace})

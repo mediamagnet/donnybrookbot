@@ -23,7 +23,7 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		var msgstr = m.Content
 		var msgarr = make([]string, 1)
-		msgstr = strings.TrimPrefix(msgstr, "a.scatter ")
+		msgstr = strings.TrimPrefix(msgstr, ".scatter ")
 		msgarr = strings.Split(msgstr, ",")
 		fmt.Println(msgarr)
 		rand.Seed(time.Now().Unix())
