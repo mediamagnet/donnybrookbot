@@ -2,6 +2,7 @@ package talk
 
 import (
 	"donnybrook/tools"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"github.com/leprosus/golang-tts"
@@ -32,17 +33,18 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if err != nil {
 			panic(err)
 		}
-		tempdir, err := ioutil.TempDir("./media", "tts")
+		tempFile, err := ioutil.TempFile("./media", "tts*.mp3")
 		if err != nil {
 			panic(err)
 		}
-		err = ioutil.WriteFile(tempdir+"message.mp3", bytes, 0644)
+		fileString := fmt.Sprintf("%v", tempFile)
+		err = ioutil.WriteFile(fileString, bytes, 0644)
 		if err != nil {
 			panic(err)
 		}
 		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
-		tools.PlayAudioFile(voice, tempdir+"message.mp3")
-		err = os.Remove(tempdir)
+		tools.PlayAudioFile(voice, fileString)
+		err = os.Remove(fileString)
 		if err != nil {
 			panic(err)
 		}
