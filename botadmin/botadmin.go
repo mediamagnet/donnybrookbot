@@ -69,7 +69,7 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 				fmt.Println("done cleaning", i)
 			}
 		} else {
-			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run a.cleanup")
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run .cleanup")
 		}
 	}
 }

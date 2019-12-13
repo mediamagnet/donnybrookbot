@@ -4,6 +4,7 @@ import (
 	"donnybrook/botadmin"
 	"donnybrook/racebot"
 	"donnybrook/tools"
+	"donnybrook/talk"
 	"fmt"
 	"log"
 	"os"
@@ -90,6 +91,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	racebot.RaceBot(s, m)
 	botadmin.BotAdmin(s, m)
+	talk.BotTalk(s, m)
 	tools.RandomString(4)
 
 	switch {

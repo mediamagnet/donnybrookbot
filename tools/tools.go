@@ -27,6 +27,7 @@ type Players struct {
 	Ready	  bool		`bson:"Ready"`
 	JoinTime  time.Time `bson:"Join Time,omitempty"`
 	DoneTime  time.Time `bson:"Done Time,omitempty"`
+	TotalTime time.Time `bson:"Total Time,omitempty"`
 }
 
 // Races should have comment

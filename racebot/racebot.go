@@ -227,6 +227,8 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var started bool
 		var playerDone bool
 		var raceid string
+		var pEntered int
+		var pDone int
 		c := tools.GetClient()
 		playerLookup := tools.MonReturnAllPlayers(c, bson.M{"PlayerID": m.Author.ID})
 		fmt.Println(playerLookup)
@@ -241,6 +243,8 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 		for _, v := range lookupStart {
 			if v.RaceID == raceid {
 				started = v.Started
+				pEntered = v.PlayersEntered
+				pDone = v.PlayersDone
 			}
 		}
 		var time2 = time.Now()
@@ -254,9 +258,39 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+">, Please wait for the race to start before finishing the race.")
 
 		} else {
-			tools.MonUpdatePlayer(c, bson.M{"Done Time": time2, "Done": true, "RaceID": "Done"}, bson.M{"PlayerID": m.Author.ID})
-			_, _ = s.ChannelMessageSend(m.ChannelID, "<"+"@"+m.Author.ID+">"+" has finished the race in: "+endtime.String())
+			tools.MonUpdatePlayer(c, bson.M{"Done Time": time2, "Done": true, "Total Time": endtime.String()}, bson.M{"PlayerID": m.Author.ID})
+			tools.MonUpdateRace(c, bson.M{"Players Done": pDone + 1}, bson.M{"RaceID": raceid})
+			_, _ = s.ChannelMessageSend(m.ChannelID, "<@"+m.Author.ID+"> has finished the race in: "+endtime.String())
+			if pDone == pEntered {
+				_, _ = s.ChannelMessageSend(m.ChannelID, "All racers have finished the race, please use `.finish Race ID` to finish race.")
+			}
 		}
+	case strings.HasPrefix(m.Content, ".finish"):
+		raceID := strings.TrimPrefix(m.Content, ".finish ")
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		playersInRace := tools.MonReturnAllPlayers(tools.GetClient(), bson.M{"RaceID": raceID})
+		theRaces := tools.MonReturnAllRaces(tools.GetClient(), bson.M{"RaceID": raceID})
+		var playerTime time.Time
+		var theRace string
+		playersIDs := make([]string, 1)
+		for _, v := range playersInRace {
+			if v.RaceID == raceID && v.Done == true {
+				playerTime = v.TotalTime
+				playerName := v.Name
+				playerString := fmt.Sprintf("%v, %v", playerTime, playerName)
+				playersIDs = append(playersIDs, playerString)
+			}
+		}
+		for _, v := range theRaces {
+			if v.RaceID == raceID {
+				theRace = v.RaceID
+			}
+		}
+
+		_, _ = s.ChannelMessageSend(m.ChannelID, "Thank you all for running in this race")
+		tools.MonDeleteRace(tools.GetClient(), bson.M{"Race ID": theRace})
+
+
 	// Quit the race
 	case m.Content == ".forfeit":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
