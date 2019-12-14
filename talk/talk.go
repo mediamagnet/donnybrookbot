@@ -34,17 +34,18 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 			panic(err)
 		}
 		tempFile, err := ioutil.TempFile("./media", "tts*.mp3")
+		fmt.Println(tempFile)
 		if err != nil {
 			panic(err)
 		}
-		fileString := fmt.Sprintf("%v", tempFile)
-		err = ioutil.WriteFile(fileString, bytes, 0644)
+		fmt.Println(tempFile.Name())
+		err = ioutil.WriteFile(tempFile.Name(), bytes, 0644)
 		if err != nil {
 			panic(err)
 		}
 		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
-		tools.PlayAudioFile(voice, fileString)
-		err = os.Remove(fileString)
+		tools.PlayAudioFile(voice, tempFile.Name())
+		err = os.Remove(tempFile.Name())
 		if err != nil {
 			panic(err)
 		}
