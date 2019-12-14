@@ -187,7 +187,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			} else {
 				_, _ = s.ChannelMessageSend(m.ChannelID, "Hmm useful.")
 			}
-		case m.Content == ".join":
+		case m.Content == ".joinvoice":
 
 			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 			voiceState, err := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
@@ -196,7 +196,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 			fmt.Println(voiceState)
 		// Leave voice
-		case m.Content == ".leave":
+		case m.Content == ".leavevoice":
 			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 			_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
 
