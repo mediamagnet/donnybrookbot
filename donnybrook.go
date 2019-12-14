@@ -156,6 +156,37 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				Text:    slogan,
 				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
 	// Join voice
+
+	case m.Content == ".useful":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		if m.GuildID == "579108681048915987" {
+			_, _ = s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+				Title: "Donnybrook Help:",
+				Author: &discordgo.MessageEmbedAuthor{
+				URL:     "https://donnybrookbot.xyz",
+				Name:    "Donnybrook",
+				IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128"},
+				Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL:    "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=128",
+				Width:  128,
+				Height: 128,
+			},
+				Color:       0x550000,
+				Description: "Welcome to the Donnybrook Race bot, Here's some useful commands: \n",
+				Fields: []*discordgo.MessageEmbedField{
+				{Name: "Character Creator", Value: "https://drsharky.github.io/VTMsite/#!/creator"},
+				{Name: "Rulebooks", Value: "https://www.dropbox.com/sh/zlnu2girsexbmes/AAB4wXi6KNsVDEaSVfG1rnfra?dl=0"},
+				{Name: "Disciplines", Value: "https://www.rpnation.com/threads/disciplines.400353/"},
+				{Name: "Faces", Value: "https://imgur.com/a/nZgd5 https://imgur.com/a/xA6K7"},
+				{Name: "Merits/Flaws/Derangements", Value: "https://www.rpnation.com/threads/merits-flaws-and-derangements.409763/"},
+				{Name: "Clans", Value: "https://www.rpnation.com/threads/clans.401951/"},
+				{Name: "VTR Sheets :/", Value: "https://drive.google.com/open?id=1QB6j594XNEXuGdlGGVyqhSl-zSBsxKsl"}},
+				Footer: &discordgo.MessageEmbedFooter{
+					Text:    slogan,
+					IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/7b5cb5a0cb148a5119a84f8a8201169f.png?size=16"}})
+		} else {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Hmm useful.")
+		}
 	case m.Content == ".join":
 
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)

@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0674ef21-b20b-4be7-bb0c-471665999ab3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/&amp;{0xc00020e180}" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/media/tts044205785.mp3" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/talk/talk.go" beforeDir="false" afterPath="$PROJECT_DIR$/talk/talk.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/donnybrook.go" beforeDir="false" afterPath="$PROJECT_DIR$/donnybrook.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
