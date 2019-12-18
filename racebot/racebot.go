@@ -119,6 +119,39 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 			// getID := tools.ChannelIDFromName(s, m.GuildID, raceFound+"-voice")
 			// _ = s.GuildMemberMove(m.GuildID, m.Author.ID, getID)
 		}
+	case strings.HasPrefix(m.Content, ".leave"):
+		raceID := strings.TrimPrefix(m.Content, ".leave ")
+		fmt.Print(strings.ToUpper(raceID))
+		playerID := ""
+		var running bool
+		raceFound := ""
+		if raceID == ".leave" {
+			s.ChannelMessageSend(m.ChannelID, "Sorry, I need your race ID also.")
+		} else {
+			playerFind := tools.MonReturnAllPlayers(tools.GetClient(), bson.M{"RaceID":strings.ToUpper(raceID)})
+			for _, v := range playerFind {
+				if v.PlayerID == m.Author.ID {
+					playerID = v.PlayerID
+				}
+			}
+			raceFind := tools.MonReturnAllRaces(tools.GetClient(), bson.M{"RaceID":strings.ToUpper(raceID)})
+			for _, v := range raceFind {
+				if v.RaceID == raceID {
+					running = v.Started
+					raceFound = v.RaceID
+				} else {
+					raceFound = "NONE"
+				}
+			}
+			if running == true {
+				s.ChannelMessageSend(m.ChannelID, "Sorry, the race has already started please `.forfeit` instead")
+			} else if raceFound != raceID {
+				s.ChannelMessageSend(m.ChannelID, "Sorry, I couldn't find that race id.")
+			} else if raceFound == raceID {
+				s.ChannelMessageSend(m.ChannelID, "No problem join again when ready.")
+				tools.MonDeletePlayer(tools.GetClient(), bson.M{"PlayerID": playerID, "RaceID": strings.ToUpper(raceID)})
+			}
+		}
 	case m.Content == ".ready":
 		var playerReady bool
 		playerRace := ""
@@ -219,7 +252,6 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		tools.MonUpdateRace(tools.GetClient(), bson.M{"Started":true, "Start Time":starttime}, bson.M{"RaceID":getRace})
-
 	// You finish the Race
 	case m.Content == ".done":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
@@ -289,8 +321,6 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		_, _ = s.ChannelMessageSend(m.ChannelID, "Thank you all for running in this race")
 		tools.MonDeleteRace(tools.GetClient(), bson.M{"Race ID": theRace})
-
-
 	// Quit the race
 	case m.Content == ".forfeit":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)

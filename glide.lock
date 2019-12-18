@@ -1,8 +1,8 @@
 hash: 8c75fc357ea325a00144d9bddf33f3e2f8ee338b575f134d7a279bd3496e588b
-updated: 2019-11-27T22:26:26.6104232-06:00
+updated: 2019-12-14T19:53:54.0755598-06:00
 imports:
-- name: github.com/andybalholm/cascadia
-  version: 903109d295d56a99095f2cfab0c2ca8d4b22f648
+- name: github.com/bmizerany/aws4
+  version: 5fb2e72396263668edd9a2956052e402cf6c104a
 - name: github.com/bwmarrin/dgvoice
   version: 3c939eca8b2f42c3c8cdaf3444ec4c0223d1d1df
 - name: github.com/bwmarrin/discordgo
@@ -19,14 +19,12 @@ imports:
   version: 10e959e9d3e808cd961308760de0c1c36285fed7
 - name: github.com/jonas747/ogg
   version: b4f6f4cf3757a3bf88eae9222045b99b9d76d8ca
-- name: github.com/konsorten/go-windows-terminal-sequences
-  version: f55edac94c9bbba5d6182a4be46d86a2c9b5b50e
-- name: github.com/PuerkitoBio/goquery
-  version: b17a2bbb6dc1e1566d1efc26a5369d3b8604542c
+- name: github.com/leprosus/golang-tts
+  version: a4737dbd315b795dc6cc24a6faca178c3b7ce3f7
 - name: github.com/rylio/ytdl
   version: bd30f781270fa4d6df59e2a49948cd157030a2c6
-- name: github.com/Sirupsen/logrus
-  version: 67a7fdcf741f4d5cee82cb9800994ccfd4393ad0
+- name: github.com/sgt-kabukiman/srapi
+  version: f35ecf10b7630e3d700b17f29f1718d131c9a76c
 - name: github.com/speps/go-hashids
   version: ad304c6ede07ca1f915c30a5510c45860aa165a7
 - name: github.com/xdg/scram
@@ -72,11 +70,6 @@ imports:
   - pbkdf2
   - poly1305
   - salsa20/salsa
-- name: golang.org/x/net
-  version: ef20fe5d793301b553005db740f730d87993f778
-  subpackages:
-  - html
-  - html/atom
 - name: golang.org/x/sync
   version: cd5d95a43a6e21273425c7ae415d3df9ea832eeb
   subpackages:
@@ -85,7 +78,6 @@ imports:
   version: 6d18c012aee9febd81bbf9806760c8c4480e870d
   subpackages:
   - cpu
-  - unix
 - name: golang.org/x/text
   version: cbf43d21aaebfdfeb81d91a5f444d13a3046e686
   subpackages:
