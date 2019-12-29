@@ -16,6 +16,8 @@
       <w>raceid</w>
       <w>racestring</w>
       <w>starttime</w>
+      <w>voicejoin</w>
+      <w>voiceleave</w>
     </words>
   </dictionary>
 </component>
