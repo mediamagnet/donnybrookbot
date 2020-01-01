@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"math/rand"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -50,23 +51,42 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "No <@"+m.Author.ID+"> you cannot scatter people.")
 		}
-	case m.Content == ".cleanup":
+	case strings.HasPrefix(m.Content, ".cleanup"):
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		delCount1 := strings.TrimPrefix(m.Content, ".cleanup ")
+		delCount, _ := strconv.Atoi(delCount1)
+		fmt.Println(delCount)
 
 		if tools.MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageMessages|discordgo.PermissionAdministrator) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Deleting messages in <#"+m.ChannelID+">")
-			time.Sleep(3 * time.Second)
-			wg.Add(100)
-			fmt.Println("Cleanup Requested")
-			for i := 0; i < 1000; i++ {
-				messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
-				if len(messages) == 0 {
-					break
+			if delCount == 0 {
+				time.Sleep(3 * time.Second)
+				wg.Add(100)
+				fmt.Println("Cleanup Requested")
+				for i := 0; i < 1000; i++ {
+					messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+					if len(messages) == 0 {
+						break
+					}
+					fmt.Println(messages[0].ID)
+					time.Sleep(500 * time.Millisecond)
+					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
+					fmt.Println("done cleaning", i)
 				}
-				fmt.Println(messages[0].ID)
-				time.Sleep(500 * time.Millisecond)
-				_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
-				fmt.Println("done cleaning", i)
+			} else {
+				time.Sleep(3 * time.Second)
+				wg.Add(100)
+				fmt.Println("Cleanup Requested")
+				for i := 0; i < delCount; i++ {
+					messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+					if len(messages) == 0 {
+						break
+					}
+					fmt.Println(messages[0].ID)
+					time.Sleep(500 * time.Millisecond)
+					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
+					fmt.Println("done cleaning", i)
+				}
 			}
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run .cleanup")
