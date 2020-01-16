@@ -12,7 +12,7 @@ import (
 )
 
 var wg sync.WaitGroup
-
+// BotAdmin commands
 func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch {
 	case strings.HasPrefix(m.Content, ".scatter"):
@@ -77,7 +77,7 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 				time.Sleep(3 * time.Second)
 				wg.Add(100)
 				fmt.Println("Cleanup Requested")
-				for i := 0; i < delCount; i++ {
+				for i := 0; i < delCount+1; i++ {
 					messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
 					if len(messages) == 0 {
 						break
