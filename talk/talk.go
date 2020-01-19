@@ -28,7 +28,7 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(m.Content, ".tts") {
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		text := strings.TrimPrefix(m.Content,".tts ")
+		text := strings.TrimPrefix(m.Content, ".tts ")
 		bytes, err := polly.Speech(text)
 		if err != nil {
 			panic(err)
@@ -48,8 +48,31 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 		err = os.Remove(tempFile.Name())
 		if err != nil {
 			panic(err)
+		} else if strings.HasPrefix(m.Content, "v@echo") {
+			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+			text := strings.TrimPrefix(m.Content, "v@echo ")
+			bytes, err := polly.Speech(text)
+			if err != nil {
+				panic(err)
+			}
+			tempFile, err := ioutil.TempFile("./media", "tts*.mp3")
+			fmt.Println(tempFile)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(tempFile.Name())
+			err = ioutil.WriteFile(tempFile.Name(), bytes, 0644)
+			if err != nil {
+				panic(err)
+			}
+			voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
+			tools.PlayAudioFile(voice, tempFile.Name())
+			err = os.Remove(tempFile.Name())
+			if err != nil {
+				panic(err)
+			}
 		}
+
 	}
 
 }
-
