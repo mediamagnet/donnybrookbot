@@ -42,6 +42,7 @@ func BotMain(s *discordgo.Session, m *discordgo.MessageCreate) {
 				{Name: ".invite", Value: "Got a question? join the Donnybrook discord here: https://discord.gg/cyZzPZY"},
 				{Name: ".voicejoin", Value: "Join a voice channel for voiced countdown. Must be in voice channel for this to work."},
 				{Name: ".voiceleave", Value: "Leave the voice channel"},
+				{Name: ".tts", Value: "Say something in your voice chat"},
 				{Name: ".cleanup", Value: "Cleans messages in channel command is run in. User must have `Manage Message` permissions."},
 				{Name: ".scatter <Channels to scatter to>", Value: "Scatter users to the provided channels. User must have `Manage Server` Permissions."},
 				{Name: ".lick", Value: "..."}},

@@ -26,9 +26,9 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 	polly.Format(golang_tts.MP3)
 	polly.Voice(golang_tts.Justin)
 
-	if strings.HasPrefix(m.Content, "v@echo") {
+	if strings.HasPrefix(m.Content, ".tts") {
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		text := strings.TrimPrefix(m.Content, "v@echo ")
+		text := strings.TrimPrefix(m.Content, ".tts ")
 		bytes, err := polly.Speech(text)
 		if err != nil {
 			panic(err)
