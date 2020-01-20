@@ -291,6 +291,7 @@ func PlayAudioFile(v *discordgo.VoiceConnection, filename string) {
 	opts := dca.StdEncodeOptions
 	opts.RawOutput = true
 	opts.Bitrate = 120
+	opts.Volume = 10
 
 	encodeSession, err := dca.EncodeFile(filename, opts)
 	if err != nil {
