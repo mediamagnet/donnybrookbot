@@ -54,8 +54,9 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	case strings.HasPrefix(m.Content, ".vol"):
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-		volNew := strings.TrimPrefix(m.Content, ".vol")
+		volNew := strings.TrimPrefix(m.Content, ".vol ")
 		volNew1, _ := strconv.Atoi(volNew)
+		fmt.Println(volNew1)
 
 		if volNew1 >= 201 {
 			bytes, err := polly.Speech("Sure but that might wreck your hearing.")
