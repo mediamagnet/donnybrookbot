@@ -77,7 +77,7 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			settingsInput := tools.Settings{
 				GuildID: m.GuildID,
-				Volume:  100,
+				Volume:  volNew1,
 			}
 			volumeFound := 0
 			volumeLookup := tools.MonReturnAllSettings(tools.GetClient(), bson.M{"GuildID": m.GuildID})
