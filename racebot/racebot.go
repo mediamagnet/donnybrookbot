@@ -246,7 +246,7 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "All racers have readied")
 			time.Sleep(1 * time.Second)
 			go s.ChannelMessageSend(m.ChannelID, "Starting in \n3.")
-			go tools.PlayAudioFile(voice, "media/racestart.mp3")
+			go tools.PlayAudioFile(voice, "media/racestart.mp3", m.GuildID)
 			time.Sleep(1 * time.Second)
 			_, _ = s.ChannelMessageSend(m.ChannelID, "2.")
 			time.Sleep(1 * time.Second)
