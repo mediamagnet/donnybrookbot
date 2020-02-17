@@ -75,6 +75,11 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 			voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
 			tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID)
 		} else {
+			settingsInput := tools.Settings{
+				GuildID: m.GuildID,
+				Volume:  100,
+			}
+			tools.MonSettings("donnybrook", "settings", settingsInput)
 			tools.MonUpdateSettings(tools.GetClient(), bson.M{"Volume": volNew1}, bson.M{"GuildID": m.GuildID})
 			bytes, err := polly.Speech("Volume has been set to " + volNew)
 			if err != nil {
