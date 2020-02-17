@@ -198,7 +198,7 @@ func MonUpdateSettings(client *mongo.Client, updatedData bson.M, filter bson.M) 
 	if err != nil {
 		log.Fatal("Error updating player", err)
 	}
-	return updatedResult.ModifiedCount, err
+	return updatedResult.ModifiedCount
 }
 
 func MonDeletePlayer(client *mongo.Client, filter bson.M) int64 {
