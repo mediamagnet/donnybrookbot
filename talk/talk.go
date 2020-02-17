@@ -79,7 +79,16 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 				GuildID: m.GuildID,
 				Volume:  100,
 			}
-			tools.MonSettings("donnybrook", "settings", settingsInput)
+			volumeLookup := MonReturnAllSettings(GetClient(), bson.M{"GuildID": guildID})
+			for _, v := range volumeLookup {
+				if v.GuildID == guildID {
+					volumeFound = v.Volume
+				}
+			}
+
+			if volumeLookup == nil {
+				tools.MonSettings("donnybrook", "settings", settingsInput)
+			}
 			tools.MonUpdateSettings(tools.GetClient(), bson.M{"Volume": volNew1}, bson.M{"GuildID": m.GuildID})
 			bytes, err := polly.Speech("Volume has been set to " + volNew)
 			if err != nil {
