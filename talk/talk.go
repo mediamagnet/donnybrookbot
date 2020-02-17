@@ -79,14 +79,15 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 				GuildID: m.GuildID,
 				Volume:  100,
 			}
-			volumeLookup := MonReturnAllSettings(GetClient(), bson.M{"GuildID": guildID})
+			volumeFound := 0
+			volumeLookup := tools.MonReturnAllSettings(tools.GetClient(), bson.M{"GuildID": m.GuildID})
 			for _, v := range volumeLookup {
-				if v.GuildID == guildID {
+				if v.GuildID == m.GuildID {
 					volumeFound = v.Volume
 				}
 			}
 
-			if volumeLookup == nil {
+			if volumeFound == 0 {
 				tools.MonSettings("donnybrook", "settings", settingsInput)
 			}
 			tools.MonUpdateSettings(tools.GetClient(), bson.M{"Volume": volNew1}, bson.M{"GuildID": m.GuildID})
