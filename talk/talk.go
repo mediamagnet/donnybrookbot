@@ -6,7 +6,9 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"github.com/leprosus/golang-tts"
+	"go.mongodb.org/mongo-driver/bson"
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"log"
@@ -26,7 +28,8 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 	polly.Format(golang_tts.MP3)
 	polly.Voice(golang_tts.Justin)
 
-	if strings.HasPrefix(m.Content, ".tts") {
+	switch {
+	case strings.HasPrefix(m.Content, ".tts"):
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		text := strings.TrimPrefix(m.Content, ".tts ")
 		bytes, err := polly.Speech(text)
@@ -44,10 +47,52 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 			panic(err)
 		}
 		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
-		tools.PlayAudioFile(voice, tempFile.Name())
+		tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID)
 		err = os.Remove(tempFile.Name())
 		if err != nil {
 			panic(err)
 		}
+	case strings.HasPrefix(m.Content, ".vol"):
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		volNew := strings.TrimPrefix(m.Content, ".vol")
+		volNew1, _ := strconv.Atoi(volNew)
+
+		if volNew1 >= 201 {
+			bytes, err := polly.Speech("Sure but that might wreck your hearing.")
+			if err != nil {
+				panic(err)
+			}
+			tempFile, err := ioutil.TempFile("./media", "tts*.mp3")
+			fmt.Println(tempFile)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(tempFile.Name())
+			err = ioutil.WriteFile(tempFile.Name(), bytes, 0644)
+			if err != nil {
+				panic(err)
+			}
+			voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
+			tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID)
+		} else {
+			tools.MonUpdateSettings(tools.GetClient(), bson.M{"Volume": volNew1}, bson.M{"GuildID": m.GuildID})
+			bytes, err := polly.Speech("Volume has been set to " + volNew)
+			if err != nil {
+				panic(err)
+			}
+			tempFile, err := ioutil.TempFile("./media", "tts*.mp3")
+			fmt.Println(tempFile)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(tempFile.Name())
+			err = ioutil.WriteFile(tempFile.Name(), bytes, 0644)
+			if err != nil {
+				panic(err)
+			}
+			voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
+			tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID)
+		}
+
 	}
 }

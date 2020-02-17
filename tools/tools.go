@@ -44,7 +44,14 @@ type Races struct {
 	PlayersDone    int       `bson:"Players Done"`
 }
 
+type Settings struct {
+	GuildID	string `bson:"GuildID"`
+	Volume	int	`bson:"Volume"`
+}
+
 var err error
+
+
 
 // GetClient
 func GetClient() *mongo.Client {
@@ -92,6 +99,21 @@ func MonRace(dbase string, collect string, races Races) {
 	fmt.Println("Inserted:", insertResult.InsertedID)
 }
 
+func MonSettings(dbase string, collect string, settings Settings) {
+	// Connecting to mongoDB
+	client := GetClient()
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal("Couldn't connect to the database", err)
+	}
+	collection := client.Database(dbase).Collection(collect)
+	insertResult, err := collection.InsertOne(context.TODO(), settings)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Inserted:", insertResult.InsertedID)
+}
+
 func MonReturnAllPlayers(client *mongo.Client, filter bson.M) []*Players {
 
 	var players []*Players
@@ -130,6 +152,25 @@ func MonReturnAllRaces(client *mongo.Client, filter bson.M) []*Races {
 	return races
 }
 
+func MonReturnAllSettings(client *mongo.Client, filter bson.M) []*Settings {
+
+	var settings []*Settings
+	collection := client.Database("donnybrook").Collection("settings")
+	cur, err := collection.Find(context.TODO(), filter)
+	if err != nil {
+		log.Fatal("Could not find document ", err)
+	}
+	for cur.Next(context.TODO()) {
+		var setting Settings
+		err = cur.Decode(&setting)
+		if err != nil {
+			log.Fatal("Decode Error ", err)
+		}
+		settings = append(settings, &setting)
+	}
+	return settings
+}
+
 func MonUpdatePlayer(client *mongo.Client, updatedData bson.M, filter bson.M) int64 {
 	collection := client.Database("donnybrook").Collection("players")
 	update := bson.D{{Key: "$set", Value: updatedData}}
@@ -148,6 +189,16 @@ func MonUpdateRace(client *mongo.Client, updatedData bson.M, filter bson.M) int6
 		log.Fatal("Error updating race,", err)
 	}
 	return updatedResult.ModifiedCount
+}
+
+func MonUpdateSettings(client *mongo.Client, updatedData bson.M, filter bson.M) int64 {
+	collection := client.Database("donnybrook").Collection("settings")
+	update := bson.D{{Key: "$set", Value: updatedData}}
+	updatedResult, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Fatal("Error updating player", err)
+	}
+	return updatedResult.ModifiedCount, err
 }
 
 func MonDeletePlayer(client *mongo.Client, filter bson.M) int64 {
@@ -179,6 +230,7 @@ func VoiceChannels(s *discordgo.Session, guildID string) []string {
 	}
 	return chanSlice
 }
+
 
 func ChannelIDFromName(s *discordgo.Session, guildID string, channelName string) string {
 	channels, _ := s.GuildChannels(guildID)
@@ -277,12 +329,21 @@ func JoinUserVoiceChannel(session *discordgo.Session, channelID string, userID s
 	return nil, err
 }
 
-func PlayAudioFile(v *discordgo.VoiceConnection, filename string) {
+func PlayAudioFile(v *discordgo.VoiceConnection, filename string, guildID string) {
 
 	// Send "speaking" packet over the voice websocket
+
 	err := v.Speaking(true)
 	if err != nil {
 		log.Fatal("Failed setting speaking", err)
+	}
+	volumeFound := 100
+
+	volumeLookup := MonReturnAllSettings(GetClient(), bson.M{"GuildID": guildID})
+	for _, v := range volumeLookup {
+		if v.GuildID == guildID {
+			volumeFound = v.Volume
+		}
 	}
 
 	// Send not "speaking" packet over the websocket when we finish
@@ -291,7 +352,7 @@ func PlayAudioFile(v *discordgo.VoiceConnection, filename string) {
 	opts := dca.StdEncodeOptions
 	opts.RawOutput = true
 	opts.Bitrate = 120
-	opts.Volume = 10
+	opts.Volume = volumeFound
 
 	encodeSession, err := dca.EncodeFile(filename, opts)
 	if err != nil {

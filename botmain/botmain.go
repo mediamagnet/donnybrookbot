@@ -83,6 +83,7 @@ func BotMain(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println(err)
 		}
 		fmt.Println(voiceState)
+
 	// Leave voice
 	case m.Content == ".voiceleave":
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
@@ -119,7 +120,7 @@ func BotMain(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		go s.ChannelMessageSend(m.ChannelID, "Peace was never an option \n "+
 			"https://i.kym-cdn.com/photos/images/newsfeed/001/597/651/360.jpg")
-		go tools.PlayAudioFile(voice, "media/honk.mp3")
+		go tools.PlayAudioFile(voice, "media/honk.mp3", m.GuildID)
 		time.Sleep(10 * time.Second)
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
 
@@ -127,7 +128,7 @@ func BotMain(s *discordgo.Session, m *discordgo.MessageCreate) {
 		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
 		go s.ChannelMessageSend(m.ChannelID, "https://i.ytimg.com/vi/lSXxEdaOqgU/maxresdefault.jpg")
-		go tools.PlayAudioFile(voice, "media/lick.mp3")
+		go tools.PlayAudioFile(voice, "media/lick.mp3", m.GuildID)
 		time.Sleep(50 * time.Second)
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
 
