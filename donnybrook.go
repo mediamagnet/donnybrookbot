@@ -72,13 +72,6 @@ func connect(s *discordgo.Session, c *discordgo.Connect) {
 			fmt.Println(err)
 		}
 		time.Sleep(15 * time.Minute)
-		settingsInsert := tools.Settings{
-			GuildID: guildName[1],
-			Volume:  100,
-		}
-		tools.MonSettings("donnybrook", "settings", settingsInsert )
-
-
 	}
 
 }
