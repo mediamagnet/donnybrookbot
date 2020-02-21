@@ -47,7 +47,7 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 			panic(err)
 		}
 		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
-		tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID)
+		tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID, true)
 		err = os.Remove(tempFile.Name())
 		if err != nil {
 			panic(err)
@@ -74,7 +74,7 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 				panic(err)
 			}
 			voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
-			tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID)
+			tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID, false)
 		} else {
 			settingsInput := tools.Settings{
 				GuildID: m.GuildID,
@@ -107,7 +107,7 @@ func BotTalk(s *discordgo.Session, m *discordgo.MessageCreate) {
 				panic(err)
 			}
 			voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
-			tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID)
+			tools.PlayAudioFile(voice, tempFile.Name(), m.GuildID, false)
 		}
 
 	}

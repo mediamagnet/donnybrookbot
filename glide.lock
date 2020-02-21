@@ -1,12 +1,14 @@
-hash: 8c75fc357ea325a00144d9bddf33f3e2f8ee338b575f134d7a279bd3496e588b
-updated: 2019-12-14T19:53:54.0755598-06:00
+hash: 005afc127d437cb4dc39ad068f4ab5888638cbb9070249149046f7eb1b833554
+updated: 2020-02-20T18:28:40.771140226-06:00
 imports:
 - name: github.com/bmizerany/aws4
   version: 5fb2e72396263668edd9a2956052e402cf6c104a
 - name: github.com/bwmarrin/dgvoice
   version: 3c939eca8b2f42c3c8cdaf3444ec4c0223d1d1df
 - name: github.com/bwmarrin/discordgo
-  version: dd99dea7adba674baa401e52362d6e330b50acf8
+  version: b3cc83b10cce9e09fd126fd9bca044be3f97a4f6
+- name: github.com/enriquebris/goconcurrentqueue
+  version: 4212a49076af810683a10568c5dcb4e87715a510
 - name: github.com/go-stack/stack
   version: 2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a
 - name: github.com/golang/snappy
@@ -23,8 +25,6 @@ imports:
   version: a4737dbd315b795dc6cc24a6faca178c3b7ce3f7
 - name: github.com/rylio/ytdl
   version: bd30f781270fa4d6df59e2a49948cd157030a2c6
-- name: github.com/sgt-kabukiman/srapi
-  version: f35ecf10b7630e3d700b17f29f1718d131c9a76c
 - name: github.com/speps/go-hashids
   version: ad304c6ede07ca1f915c30a5510c45860aa165a7
 - name: github.com/xdg/scram
@@ -32,7 +32,7 @@ imports:
 - name: github.com/xdg/stringprep
   version: 73f8eece6fdcd902c185bf651de50f3828bed5ed
 - name: go.mongodb.org/mongo-driver
-  version: 797e0a635920c291b1808180bf7249eaac5eafed
+  version: c5d1ddd8cbe3680a846c26e13f1117ca00e83e75
   subpackages:
   - bson
   - bson/bsoncodec
@@ -63,7 +63,7 @@ imports:
   - x/mongo/driver/uuid
   - x/mongo/driver/wiremessage
 - name: golang.org/x/crypto
-  version: ac88ee75c92c889b97e05591e9a39b6480c538b3
+  version: bac4c82f69751a6dd76e702d54b3ceb88adab236
   subpackages:
   - internal/subtle
   - nacl/secretbox
@@ -75,11 +75,11 @@ imports:
   subpackages:
   - semaphore
 - name: golang.org/x/sys
-  version: 6d18c012aee9febd81bbf9806760c8c4480e870d
+  version: cb0a6d8edb6c3528b01a0be84a5fe513dbf880a6
   subpackages:
   - cpu
 - name: golang.org/x/text
-  version: cbf43d21aaebfdfeb81d91a5f444d13a3046e686
+  version: 929e72ca90deac4784bbe451caf10faa5b256ebe
   subpackages:
   - transform
   - unicode/norm
