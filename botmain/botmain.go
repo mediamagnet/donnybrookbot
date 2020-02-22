@@ -132,5 +132,13 @@ func BotMain(s *discordgo.Session, m *discordgo.MessageCreate) {
 		time.Sleep(50 * time.Second)
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
 
+	case m.Content == ".back":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
+		go s.ChannelMessageSend(m.ChannelID, "I'll be back.")
+		go tools.PlayAudioFile(voice, "media/DEDENDENDEDEN.mp3", m.GuildID, false)
+		time.Sleep(45 * time.Second)
+		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false,false)
+
 	}
 }
