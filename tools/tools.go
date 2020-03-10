@@ -58,8 +58,8 @@ var err error
 
 // GetClient
 func GetClient() *mongo.Client {
-	// clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	clientOptions := options.Client().ApplyURI("mongodb+srv://mediamagnet:a287593A@cluster0-hjehy.gcp.mongodb.net/test?retryWrites=true&w=majority")
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	// clientOptions := options.Client().ApplyURI("mongodb+srv://mediamagnet:a287593A@cluster0-hjehy.gcp.mongodb.net/test?retryWrites=true&w=majority")
 	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
 		log.Fatal(err)
