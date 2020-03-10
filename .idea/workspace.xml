@@ -120,6 +120,10 @@
     <option name="LAST_COMMIT_MESSAGE" value="added env file and added to ignore" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="643" y="287" width="626" height="539" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1582607262904">
+      <screen x="0" y="39" width="1920" height="1041" />
+    </state>
+    <state x="643" y="287" width="626" height="539" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.39.1920.1041/1920.0.1920.1080@0.39.1920.1041" timestamp="1582607262904" />
     <state x="674" y="155" key="#go_build_main.go" timestamp="1575739135276">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
