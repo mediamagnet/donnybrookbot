@@ -16,10 +16,10 @@ func BotMain(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ready up for race
 	// Help text
 	case m.Content == ".help":
-		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 		if m.Author.ID == "668208024862588928" {
-			s.ChannelMessageSend(m.ChannelID, "]help")
+			_, _ = s.ChannelMessageSend(m.ChannelID, "]help")
 		} else {
+			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 			_, _ = s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 				Title: "Donnybrook Help:",
 				Author: &discordgo.MessageEmbedAuthor{
@@ -52,6 +52,7 @@ func BotMain(s *discordgo.Session, m *discordgo.MessageCreate) {
 				Footer: &discordgo.MessageEmbedFooter{
 					Text:    slogan,
 					IconURL: "https://cdn.discordapp.com/avatars/637392848307748895/b20c5e4c7ac3587a7c2438a78722b425.png?size=16"}})
+
 		}
 	// Helf text
 	case m.Content == ".helf":
