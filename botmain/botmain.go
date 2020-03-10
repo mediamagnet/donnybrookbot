@@ -16,6 +16,7 @@ func BotMain(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ready up for race
 	// Help text
 	case m.Content == ".help":
+		//help
 		if m.Author.ID == "639949497467797524" {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "]help")
 		} else {
