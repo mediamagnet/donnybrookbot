@@ -88,6 +88,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		botmain.BotMain(s, m)
 
 		tools.RandomString(4)
+	} else if tools.ComesFromDM(s, m) == true && m.Author.ID == "108344508940316672" {
+		if m.Content == ".lick" {
+			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+			voice, _ := tools.JoinUserVoiceChannel(s, "324233923506733058", "108344508940316672", "108344598018957312")
+			go s.ChannelMessageSend(m.ChannelID, "https://i.ytimg.com/vi/lSXxEdaOqgU/maxresdefault.jpg")
+			go tools.PlayAudioFile(voice, "media/lick.mp3", m.GuildID, false)
+			time.Sleep(50 * time.Second)
+			_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
+		}
+
 	} else {
 		fmt.Println("It's a DM")
 	}
