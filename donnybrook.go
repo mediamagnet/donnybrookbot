@@ -91,11 +91,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	} else if tools.ComesFromDM(s, m) == true && m.Author.ID == "108344508940316672" {
 		if m.Content == ".lick" {
 			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
-			voice, _ := tools.JoinUserVoiceChannel(s, "324233923506733058", "108344508940316672", "108344598018957312")
+
+			//voice, _ := tools.JoinUserVoiceChannel(s, "324233923506733058", "108344508940316672", "108344598018957312")
+			voice, _ := s.ChannelVoiceJoin("108344598018957312", "324233923506733058", false, false)
 			go s.ChannelMessageSend(m.ChannelID, "https://i.ytimg.com/vi/lSXxEdaOqgU/maxresdefault.jpg")
-			go tools.PlayAudioFile(voice, "media/lick.mp3", m.GuildID, false)
+			go tools.PlayAudioFile(voice, "media/lick.mp3", "108344598018957312", false)
 			time.Sleep(50 * time.Second)
-			_, _ = s.ChannelVoiceJoin(m.GuildID, "", false, false)
+			_, _ = s.ChannelVoiceJoin("108344598018957312", "", false, false)
 		}
 
 	} else {
