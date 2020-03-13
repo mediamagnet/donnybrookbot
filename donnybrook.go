@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -89,7 +90,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		tools.RandomString(4)
 	} else if tools.ComesFromDM(s, m) == true && m.Author.ID == "108344508940316672" {
-		if m.Content == ".lick" {
+		switch {
+		case m.Content == ".lick":
 			_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
 
 			//voice, _ := tools.JoinUserVoiceChannel(s, "324233923506733058", "108344508940316672", "108344598018957312")
@@ -98,6 +100,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			go tools.PlayAudioFile(voice, "media/lick.mp3", "108344598018957312", false)
 			time.Sleep(50 * time.Second)
 			_, _ = s.ChannelVoiceJoin("108344598018957312", "", false, false)
+		case strings.HasPrefix(m.Content, ".asay"):
+			msg := strings.TrimPrefix(m.Content, ".asay ")
+			msg1 := strings.Split(msg, ",")
+			channel := msg1[0]
+			body := msg1[1]
+			s.ChannelMessageSend(channel, body)
+
 		}
 
 	} else {
