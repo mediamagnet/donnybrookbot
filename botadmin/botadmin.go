@@ -3,15 +3,17 @@ package botadmin
 import (
 	"donnybrook/tools"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 var wg sync.WaitGroup
+
 // BotAdmin commands
 func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch {
@@ -32,7 +34,7 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if tools.MemberHasPermission(s, m.GuildID, m.Author.ID, discordgo.PermissionManageServer|discordgo.PermissionAll) {
 			wg.Add(len(vUsers))
 			// vChan := voiceChannels(s, m.GuildID)
-			tools.PlayAudioFile(voice, "media/scatter2.mp3", m.GuildID,false)
+			tools.PlayAudioFile(voice, "media/scatter2.mp3", m.GuildID, false)
 			for i := 0; i <= len(vUsers)-1; i++ {
 				go func(i int) {
 					defer wg.Done()
@@ -68,7 +70,8 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 					if len(messages) == 0 {
 						break
 					}
-					fmt.Println(messages[0].ID)
+					// fmt.Println(messages[0].ID)
+					println(i)
 					time.Sleep(500 * time.Millisecond)
 					_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
 					fmt.Println("done cleaning", i)
