@@ -146,5 +146,13 @@ func BotMain(s *discordgo.Session, m *discordgo.MessageCreate) {
 		time.Sleep(45 * time.Second)
 		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false,false)
 
+	case m.Content == ".bwaaa":
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+		voice, _ := tools.JoinUserVoiceChannel(s, m.ChannelID, m.Author.ID, m.GuildID)
+		go s.ChannelMessageSend(m.ChannelID, "BWAAAAAAAAA.")
+		go tools.PlayAudioFile(voice, "media/bwaaa.mp3", m.GuildID, false)
+		time.Sleep(45 * time.Second)
+		_, _ = s.ChannelVoiceJoin(m.GuildID, "", false,false)
+
 	}
 }

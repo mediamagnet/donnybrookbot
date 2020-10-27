@@ -1,9 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="0674ef21-b20b-4be7-bb0c-471665999ab3" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/media/bwaaa.mp3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/discord.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/discord.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/donnybrook.go" beforeDir="false" afterPath="$PROJECT_DIR$/donnybrook.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/botmain/botmain.go" beforeDir="false" afterPath="$PROJECT_DIR$/botmain/botmain.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,7 +38,7 @@
       </list>
     </option>
   </component>
-  <component name="GOROOT" path="/usr/lib/go" />
+  <component name="GOROOT" path="C:\Go" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -32,13 +52,13 @@
   </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showExcludedFiles" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="DefaultGoTemplateProperty" value="Go Application" />
     <property name="GO_FMT" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="configurable.Global.GOPATH.is.expanded" value="true" />
@@ -49,10 +69,13 @@
     <property name="go.tried.to.enable.integration.dep.integrator" value="true" />
     <property name="go.vendoring.notification.had.been.shown" value="true" />
     <property name="ignore.virus.scanning.warn.message" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Bolts" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/media" />
     <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Color Scheme Font" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\natha\Documents\git\donnybrook\media" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\natha\go\src\donnybrook" />
       <recent name="C:\Users\natha\go\src\gitlab.com\mediamagnet\donnybrook" />
@@ -85,33 +108,21 @@
       </list>
     </recent_temporary>
   </component>
-  <component name="ServiceViewManager">
-    <option name="viewStates">
-      <list>
-        <serviceView>
-          <treeState>
-            <expand />
-            <select />
-          </treeState>
-        </serviceView>
-      </list>
-    </option>
-  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="project-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
@@ -119,59 +130,9 @@
     <option name="LAST_COMMIT_MESSAGE" value="added env file and added to ignore" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="643" y="287" width="626" height="539" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1582607262904">
-      <screen x="0" y="39" width="1920" height="1041" />
-    </state>
-    <state x="643" y="287" width="626" height="539" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.39.1920.1041/1920.0.1920.1080@0.39.1920.1041" timestamp="1582607262904" />
-    <state x="674" y="155" key="#go_build_main.go" timestamp="1575739135276">
+    <state x="752" y="446" key="#GOROOT" timestamp="1603772929903">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="674" y="155" key="#go_build_main.go/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1575739135276" />
-    <state x="739" y="312" width="426" height="479" key="FileChooserDialogImpl" timestamp="1581908533068">
-      <screen x="0" y="39" width="1920" height="1041" />
-    </state>
-    <state x="739" y="312" width="426" height="479" key="FileChooserDialogImpl/0.39.1920.1041/1920.0.1920.1080@0.39.1920.1041" timestamp="1581908533068" />
-    <state x="739" y="273" key="FileChooserDialogImpl/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1575739124174" />
-    <state width="1877" height="326" key="GridCell.Tab.0.bottom" timestamp="1576268641800">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="326" key="GridCell.Tab.0.bottom/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576268641800" />
-    <state width="1877" height="326" key="GridCell.Tab.0.center" timestamp="1576268641800">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="326" key="GridCell.Tab.0.center/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576268641800" />
-    <state width="1877" height="326" key="GridCell.Tab.0.left" timestamp="1576268641800">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="326" key="GridCell.Tab.0.left/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576268641800" />
-    <state width="1877" height="326" key="GridCell.Tab.0.right" timestamp="1576268641800">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="326" key="GridCell.Tab.0.right/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576268641800" />
-    <state width="1877" height="326" key="GridCell.Tab.1.bottom" timestamp="1576268641800">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="326" key="GridCell.Tab.1.bottom/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576268641800" />
-    <state width="1877" height="326" key="GridCell.Tab.1.center" timestamp="1576268641800">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="326" key="GridCell.Tab.1.center/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576268641800" />
-    <state width="1877" height="326" key="GridCell.Tab.1.left" timestamp="1576268641800">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="326" key="GridCell.Tab.1.left/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576268641800" />
-    <state width="1877" height="326" key="GridCell.Tab.1.right" timestamp="1576268641800">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1877" height="326" key="GridCell.Tab.1.right/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576268641800" />
-    <state x="461" y="200" key="SettingsEditor" timestamp="1582244940430">
-      <screen x="0" y="39" width="1920" height="1041" />
-    </state>
-    <state x="461" y="200" key="SettingsEditor/0.39.1920.1041/1920.0.1920.1080@0.39.1920.1041" timestamp="1582244940430" />
-    <state x="461" y="161" key="SettingsEditor/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1576374824811" />
-    <state x="668" y="337" key="git4idea.merge.GitPullDialog" timestamp="1581915946720">
-      <screen x="0" y="39" width="1920" height="1041" />
-    </state>
-    <state x="668" y="337" key="git4idea.merge.GitPullDialog/0.39.1920.1041/1920.0.1920.1080@0.39.1920.1041" timestamp="1581915946720" />
+    <state x="752" y="446" key="#GOROOT/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1603772929903" />
   </component>
 </project>
