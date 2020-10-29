@@ -16,16 +16,15 @@ import (
 	"time"
 )
 
-
 // Players should have comment
 type Players struct {
 	Name      string    `bson:"Name"`
-	GuildID	  string    `bson:"GuildID"`
+	GuildID   string    `bson:"GuildID"`
 	PlayerID  string    `bson:"PlayerID"`
 	ChannelID string    `bson:"ChannelID"`
 	RaceID    string    `bson:"RaceID"`
-	Done	  bool      `bson:"Done"`
-	Ready	  bool		`bson:"Ready"`
+	Done      bool      `bson:"Done"`
+	Ready     bool      `bson:"Ready"`
 	JoinTime  time.Time `bson:"Join Time,omitempty"`
 	DoneTime  time.Time `bson:"Done Time,omitempty"`
 	TotalTime time.Time `bson:"Total Time,omitempty"`
@@ -46,15 +45,11 @@ type Races struct {
 }
 
 type Settings struct {
-	GuildID	string `bson:"GuildID"`
-	Volume	int	`bson:"Volume"`
+	GuildID string `bson:"GuildID"`
+	Volume  int    `bson:"Volume"`
 }
 
 var err error
-
-
-
-
 
 // GetClient
 func GetClient() *mongo.Client {
@@ -235,7 +230,6 @@ func VoiceChannels(s *discordgo.Session, guildID string) []string {
 	return chanSlice
 }
 
-
 func ChannelIDFromName(s *discordgo.Session, guildID string, channelName string) string {
 	channels, _ := s.GuildChannels(guildID)
 	var c = ""
@@ -284,14 +278,14 @@ func MemberHasPermission(s *discordgo.Session, guildID string, userID string, pe
 
 func FindUserVoiceState(session *discordgo.Session, userID string, guildID string) (*discordgo.VoiceState, error) {
 	guild, err := session.State.Guild(guildID)
-		for _, vs := range guild.VoiceStates {
-			if vs.UserID == userID {
-				return vs, nil
-			}
+	for _, vs := range guild.VoiceStates {
+		if vs.UserID == userID {
+			return vs, nil
 		}
-		if err != nil {
-			fmt.Println("Could not find guild specified")
-		}
+	}
+	if err != nil {
+		fmt.Println("Could not find guild specified")
+	}
 
 	return nil, errors.New("could not find user's voice state")
 }
@@ -392,14 +386,14 @@ func PlayAudioFile(v *discordgo.VoiceConnection, filename string, guildID string
 		if queue.GetLen() == 0 {
 			fmt.Println("Queue Empty")
 		} else {
-			for i := 0; i <= queue.GetLen()-1; i++{
+			for i := 0; i <= queue.GetLen()-1; i++ {
 				item, err := queue.Dequeue()
 				if err != nil {
 					fmt.Println(err)
 					return
 				}
 
-				item1 := fmt.Sprintf("%v",item)
+				item1 := fmt.Sprintf("%v", item)
 
 				encodeSession, err := dca.EncodeFile(item1, opts)
 				if err != nil {
@@ -432,7 +426,6 @@ func PlayAudioFile(v *discordgo.VoiceConnection, filename string, guildID string
 
 	}
 }
-
 
 func ComesFromDM(s *discordgo.Session, m *discordgo.MessageCreate) bool {
 	channel, err := s.State.Channel(m.ChannelID)
