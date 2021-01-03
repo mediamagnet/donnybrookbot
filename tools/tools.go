@@ -47,6 +47,11 @@ type Races struct {
 type Settings struct {
 	GuildID string `bson:"GuildID"`
 	Volume  int    `bson:"Volume"`
+	VoidChan string `bson:"VoidChan,omitempty"`
+}
+//CList blah
+type CList struct {
+	Channel *string
 }
 
 var err error
@@ -54,7 +59,7 @@ var err error
 // GetClient
 func GetClient() *mongo.Client {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	// clientOptions := options.Client().ApplyURI("mongodb+srv://mediamagnet:a287593A@cluster0-hjehy.gcp.mongodb.net/test?retryWrites=true&w=majority")
+	
 	client, err := mongo.NewClient(clientOptions)
 	if err != nil {
 		log.Fatal(err)
@@ -133,7 +138,6 @@ func MonReturnAllPlayers(client *mongo.Client, filter bson.M) []*Players {
 }
 
 func MonReturnAllRaces(client *mongo.Client, filter bson.M) []*Races {
-
 	var races []*Races
 	collection := client.Database("donnybrook").Collection("races")
 	cur, err := collection.Find(context.TODO(), filter)
@@ -152,7 +156,6 @@ func MonReturnAllRaces(client *mongo.Client, filter bson.M) []*Races {
 }
 
 func MonReturnAllSettings(client *mongo.Client, filter bson.M) []*Settings {
-
 	var settings []*Settings
 	collection := client.Database("donnybrook").Collection("settings")
 	cur, err := collection.Find(context.TODO(), filter)
@@ -218,6 +221,15 @@ func MonDeleteRace(client *mongo.Client, filter bson.M) int64 {
 	return deleteResult.DeletedCount
 }
 
+func MonDeleteSettings(client *mongo.Client, filter bson.M) int64 {
+	collection := client.Database("donnybrook").Collection("settings")
+	deleteResult, err := collection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		log.Fatal("Error deleting player", err)
+	}
+	return deleteResult.DeletedCount
+}
+
 func VoiceChannels(s *discordgo.Session, guildID string) []string {
 	channels, _ := s.GuildChannels(guildID)
 	chanSlice := make([]string, 1)
@@ -230,15 +242,17 @@ func VoiceChannels(s *discordgo.Session, guildID string) []string {
 	return chanSlice
 }
 
-func ChannelIDFromName(s *discordgo.Session, guildID string, channelName string) string {
+func ChannelIDFromName(s *discordgo.Session, guildID string, channelName string) CList {
 	channels, _ := s.GuildChannels(guildID)
 	var c = ""
-	for _, cList := range channels {
-		if cList.Name == channelName {
-			c = cList.ID
+	for _, cList1 := range channels {
+		if cList1.Name == channelName {
+			c = cList1.ID
 		}
 	}
-	return c
+	return CList{
+		Channel: &c,
+	}
 }
 
 func RandomInt(min, max int) int {

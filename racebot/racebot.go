@@ -65,8 +65,7 @@ func RaceBot(s *discordgo.Session, m *discordgo.MessageCreate) {
 				fmt.Println("Error creating channel", err)
 			}
 			getID := tools.ChannelIDFromName(s, m.GuildID, raceid+"-voice")
-			_, _ = s.ChannelVoiceJoin(m.GuildID, getID, false, false)
-
+			_, _ = s.ChannelVoiceJoin(m.GuildID, fmt.Sprintf("%v",getID.Channel), false, false)
 		}
 		// Join Race
 	case strings.HasPrefix(m.Content, ".join"):

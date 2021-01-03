@@ -20,10 +20,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0674ef21-b20b-4be7-bb0c-471665999ab3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/media/bwaaa.mp3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/discord.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/discord.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/botmain/botmain.go" beforeDir="false" afterPath="$PROJECT_DIR$/botmain/botmain.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/botadmin/botadmin.go" beforeDir="false" afterPath="$PROJECT_DIR$/botadmin/botadmin.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/racebot/racebot.go" beforeDir="false" afterPath="$PROJECT_DIR$/racebot/racebot.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/tools.go" beforeDir="false" afterPath="$PROJECT_DIR$/tools/tools.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +72,7 @@
     <property name="go.vendoring.notification.had.been.shown" value="true" />
     <property name="ignore.virus.scanning.warn.message" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/media" />
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Color Scheme Font" />
+    <property name="settings.editor.selected.configurable" value="go.vgo" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -83,7 +85,7 @@
     </key>
   </component>
   <component name="RunManager">
-    <configuration name="go build main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+    <configuration name="go build donnybrook.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="Donnybrook" />
       <working_directory value="$PROJECT_DIR$/" />
       <EXTENSION ID="net.ashald.envfile">
@@ -104,7 +106,7 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Build.go build main.go" />
+        <item itemvalue="Go Build.go build donnybrook.go" />
       </list>
     </recent_temporary>
   </component>
@@ -129,10 +131,73 @@
     <MESSAGE value="added env file and added to ignore" />
     <option name="LAST_COMMIT_MESSAGE" value="added env file and added to ignore" />
   </component>
+  <component name="VgoProject">
+    <integration-enabled>true</integration-enabled>
+  </component>
   <component name="WindowStateProjectService">
     <state x="752" y="446" key="#GOROOT" timestamp="1603772929903">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="752" y="446" key="#GOROOT/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1603772929903" />
+    <state x="693" y="386" key="#Go_Linter" timestamp="1607407836097">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="693" y="386" key="#Go_Linter/0.0.1920.1040@0.0.1920.1040" timestamp="1604526316763" />
+    <state x="693" y="386" key="#Go_Linter/1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1607407836097" />
+    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1609712004816">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1609712004816" />
+    <state x="825" y="182" key="EnvironmentVariablesDialog" timestamp="1609711854974">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="825" y="182" key="EnvironmentVariablesDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1609711854974" />
+    <state width="1877" height="275" key="GridCell.Tab.0.bottom" timestamp="1609717802324">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="275" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1609717802324" />
+    <state width="1877" height="275" key="GridCell.Tab.0.center" timestamp="1609717802324">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="275" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1609717802324" />
+    <state width="1877" height="275" key="GridCell.Tab.0.left" timestamp="1609717802323">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="275" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1609717802323" />
+    <state width="1877" height="275" key="GridCell.Tab.0.right" timestamp="1609717802324">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="275" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1609717802324" />
+    <state width="1877" height="340" key="GridCell.Tab.1.bottom" timestamp="1609717769075">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="340" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1609717769075" />
+    <state width="1877" height="340" key="GridCell.Tab.1.center" timestamp="1609717769075">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="340" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1609717769075" />
+    <state width="1877" height="340" key="GridCell.Tab.1.left" timestamp="1609717769075">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="340" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1609717769075" />
+    <state width="1877" height="340" key="GridCell.Tab.1.right" timestamp="1609717769075">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="340" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1609717769075" />
+    <state x="461" y="164" key="SettingsEditor" timestamp="1609712083663">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="461" y="164" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1609712083663" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/botadmin/botadmin.go</url>
+          <line>111</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

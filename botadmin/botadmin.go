@@ -3,6 +3,7 @@ package botadmin
 import (
 	"donnybrook/tools"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -45,7 +46,7 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 					vChan = rand.Intn(len(msgarr))
 					pickedChan = tools.ChannelIDFromName(s, m.GuildID, msgarr[vChan])
 
-					_ = s.GuildMemberMove(m.GuildID, choiceUser, pickedChan)
+					_ = s.GuildMemberMove(m.GuildID, choiceUser, pickedChan.Channel)
 					time.Sleep(500 * time.Millisecond)
 				}(i)
 			}
@@ -93,6 +94,42 @@ func BotAdmin(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		} else {
 			_, _ = s.ChannelMessageSend(m.ChannelID, "Sorry <@"+m.Author.ID+"> You need Manage Message permissions to run .cleanup")
+		}
+	case strings.HasPrefix(m.Content, ".void "):
+		_ = s.ChannelMessageDelete(m.ChannelID, m.ID)
+
+		if strings.Contains(strings.TrimPrefix(m.Content, ".void"), "start") {
+			_, _ = s.ChannelMessageSend(m.ChannelID, "Be careful as the void might yell back.")
+			_, _ = s.ChannelEditComplex(m.ChannelID, &discordgo.ChannelEdit{
+				Topic:    "Be careful as the void might yell back.",
+				Position: 99,
+			})
+			tools.MonUpdateSettings(tools.GetClient(), bson.M{"VoidChan": m.ChannelID}, bson.M{"GuildID": m.GuildID})
+			for {
+				wg.Add(1)
+				mCount, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+				if len(mCount) == 0 {
+					time.Sleep(30 * time.Second)
+				} else if len(mCount) >= 1 {
+					for i := 0; i < 1000; i++ {
+						messages, _ := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+						if len(messages) == 0 {
+							break
+						}
+						time.Sleep(500 * time.Millisecond)
+						_ = s.ChannelMessageDelete(m.ChannelID, messages[0].ID)
+						fmt.Println("done cleaning", i)
+					}
+				}
+				wg.Done()
+			}
+		} else if strings.Contains(strings.TrimPrefix(m.Content, ".void "), "stop") {
+			tools.MonDeleteSettings(tools.GetClient(), bson.M{"VoidChan": m.ChannelID})
+			s.ChannelMessageSend(m.ChannelID, "The Void sleeps for now.")
+			_, _ = s.ChannelEditComplex(m.ChannelID, &discordgo.ChannelEdit{
+				Topic:    " ",
+				Position: 99,
+			})
 		}
 	}
 }
