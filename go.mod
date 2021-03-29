@@ -9,11 +9,11 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.2-0.20190904063534-ff6b7dc882cf // indirect
 	github.com/google/go-cmp v0.5.2 // indirect
-	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/jonas747/dca v0.0.0-20201113050843-65838623978b
 	github.com/jonas747/ogg v0.0.0-20161220051205-b4f6f4cf3757 // indirect
 	github.com/leprosus/golang-tts v1.0.0
+	github.com/spf13/viper v1.7.1 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/tidwall/pretty v1.0.2 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
